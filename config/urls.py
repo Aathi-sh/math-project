@@ -22,5 +22,7 @@ urlpatterns = [
     path('', include('apps.dyn_api.urls')),
     path('charts/', include('apps.charts.urls')),
     path("admin/", admin.site.urls),
-    path("", include('admin_adminlte.urls'))
+    path("", include('admin_adminlte.urls')),
+    path('puzzles/',include('create_puzzles.urls')),
+    
 ]

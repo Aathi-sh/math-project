@@ -39,6 +39,12 @@
     {% endif %}
     {% endfor %}
     {% endif %}
+    <li class="nav-item" >
+      <a href="{% url 'puzzle-list' %}" class ="nav-link">
+        <i class="nav-icon fas fa-puzzle-piece"></i>
+        <p> Create puzzles </p>
+      </a>
+    </li>
 
     <li class="nav-item {% if 'apps' in parent %} menu-open {% endif %}">
       <a href="#" class="nav-link {% if 'apps' in parent %} active {% endif %}">

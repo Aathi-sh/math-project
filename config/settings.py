@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "create_puzzles",
 
     # Serve UI pages
     "apps.pages",
@@ -128,8 +129,12 @@ if DB_ENGINE and DB_NAME and DB_USERNAME:
 else:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': 'db.sqlite3',
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'math_games',
+            'USER':'math_user',
+            'PASSWORD':'Aathish@5265',
+            'HOST':'localhost',
+            'PORT':'5432'
         }
     }
 

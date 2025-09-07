@@ -1,0 +1,7 @@
+<h1>Delete Puzzle</h1>
+<p>Are you sure you want to delete "{{ puzzle.title }}"?</p>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Confirm Delete</button>
+</form>
+<a href="{% url 'puzzle-list' %}">Cancel</a>

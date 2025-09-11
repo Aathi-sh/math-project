@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Confirm Delete</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .delete-container {
+            width: 400px;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        h1 {
+            color: #f44336;
+            margin-bottom: 10px;
+        }
+        p {
+            color: #555;
+            line-height: 1.5;
+        }
+        .item-details {
+            font-weight: bold;
+            color: #333;
+        }
+        .delete-actions {
+            margin-top: 25px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        .confirm-btn, .cancel-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        .confirm-btn {
+            background-color: #f44336;
+            color: white;
+        }
+        .confirm-btn:hover {
+            background-color: #da190b;
+        }
+        .cancel-btn {
+            background-color: #999;
+            color: white;
+        }
+        .cancel-btn:hover {
+            background-color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="delete-container">
+        <h1>Confirm Deletion</h1>
+        <p>Are you sure you want to delete the following item?</p>
+        <p class="item-details">
+            ID: {{ item.id }}<br>
+            Title: {{ item.title }}<br>
+            Author: {{ item.author }}
+        </p>
+        <form action="{% url 'create_puzzles:item-delete' item.pk %}" method="post">
+            {% csrf_token %}
+            <div class="delete-actions">
+                <button type="submit" class="confirm-btn">Confirm Delete</button>
+                <a href="{% url 'create_puzzles:item-list' %}" class="cancel-btn">Cancel</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

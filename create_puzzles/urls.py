@@ -1,11 +1,11 @@
-from django.contrib import admin
 from django.urls import path
 from . import views
-
+app_name = 'create_puzzles'
 
 urlpatterns = [
-    path('list/',views.puzzle_list,name='puzzle-list'),
-    path('create/',views.puzzle_create,name='puzzle-create'),
-    path('update/<int:pk>/',views.puzzle_update,name='puzzle-update'),
-    path('delete/<int:pk>/',views.puzzle_delete,name='puzzle-delete'),
+    path('', views.item_list, name='item-list'),
+    path('create/', views.item_create, name='item-create'),
+    path('update/<int:pk>/', views.item_update, name='item-update'),
+    path('delete/<int:pk>/', views.item_delete, name='item-delete'),
+    path('confirm_delete/<int:pk>/', views.item_confirm_delete, name='item-confirm-delete'),
 ]

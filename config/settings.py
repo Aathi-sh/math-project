@@ -130,8 +130,8 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'math_games',
-            'USER':'math_user',
+            'NAME': 'puzzle',
+            'USER':'postgres',
             'PASSWORD':'Aathish@5265',
             'HOST':'localhost',
             'PORT':'5432'

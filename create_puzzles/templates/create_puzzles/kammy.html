@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% if is_update %}Update Item{% else %}Create Item{% endif %}</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .form-container {
+            width: 500px;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+        }
+        .form-group input:required:invalid {
+            border-color: #f44336;
+        }
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .submit-btn, .cancel-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        .submit-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .submit-btn:hover {
+            background-color: #45a049;
+        }
+        .cancel-btn {
+            background-color: #999;
+            color: white;
+        }
+        .cancel-btn:hover {
+            background-color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>{% if is_update %}Update Item{% else %}Create New Item{% endif %}</h1>
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" value="{{ item.name|default:'' }}" required>
+            </div>
+            <div class="form-group">
+                <label for="title">Title</label>
+                <input type="text" id="title" name="title" value="{{ item.title|default:'' }}" required>
+            </div>
+            <div class="form-group">
+                <label for="author">Author</label>
+                <input type="text" id="author" name="author" value="{{ item.author|default:'' }}" required>
+            </div>
+            <div class="form-group">
+                <label for="difficulty">Difficulty</label>
+                <select id="difficulty" name="difficulty" required>
+                    <option value="" disabled {% if not is_update %}selected{% endif %}>Select a difficulty</option>
+                    <option value="Easy" {% if item.difficulty == "Easy" %}selected{% endif %}>Easy</option>
+                    <option value="Medium" {% if item.difficulty == "Medium" %}selected{% endif %}>Medium</option>
+                    <option value="Hard" {% if item.difficulty == "Hard" %}selected{% endif %}>Hard</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="row">Row</label>
+                <input type="text" id="row" name="row" value="{{ item.row|default:'' }}" required>
+            </div>
+            <div class="form-group">
+                <label for="column">Column</label>
+                <input type="text" id="column" name="column" value="{{ item.column|default:'' }}" required>
+            </div>
+            <div class="form-group">
+                <label for="grid">Grid</label>
+                <input type="text" id="grid" name="grid" value="{{ item.grid|default:'' }}" required>
+            </div>
+            <div class="form-group">
+                <label for="solution">Solution</label>
+                <input type="text" id="solution" name="solution" value="{{ item.solution|default:'' }}" required>
+            </div>
+            <div class="form-group">
+                <label for="created_by">
+                    {% if is_update %}Updated By{% else %}Created By{% endif %}
+                </label>
+                <input type="text" id="created_by" name="{% if is_update %}updated_by{% else %}created_by{% endif %}" value="{% if is_update %}{{ item.updated_by|default:'' }}{% else %}{{ item.created_by|default:'' }}{% endif %}" required>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="submit-btn">
+                    {% if is_update %}Update{% else %}Create{% endif %}
+                </button>
+                <a href="{% url 'create_puzzles:item-list' %}" class="cancel-btn">Cancel</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

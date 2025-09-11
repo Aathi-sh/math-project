@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> {% if is_update%}Update item {% else%} Create item {%endif%}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+        .container {
+            width:100%;
+            padding:0;
+            margin:0;
+            
+            
+        }
+        .custom-container{
+            max-width:960px;
+            length:100%;
+            padding:20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            border: none;
+        }
+        .card-header {
+            background-color: #f1f8ff;
+            font-weight: 600;
+            border-bottom: 1px solid #e3f2fd;
+        }
+        .grid-container {
+            display: inline-block;
+            margin: 20px 0;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            overflow-x: auto;
+            max-width: 100%;
+        }
+        .grid-cell {
+            width: 60px;
+            height: 60px;
+            text-align: center;
+            line-height: 60px;
+            font-size: 20px;
+            font-weight: 500;
+            border: 2px solid #dee2e6;
+            margin: 2px;
+            border-radius: 5px;
+            background-color: white;
+            display: inline-block;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .grid-cell.fixed {
+            background-color: #e9ecef;
+            font-weight: bold;
+        }
+        .grid-cell.operator {
+            background-color: #d8f3dc;
+            color: #2d6a4f;
+        }
+        .grid-cell.equals {
+            background-color: #ffd6ff;
+            color: #7b2cbf;
+        }
+        .grid-cell.empty {
+            background-color: #f8f9fa;
+            border: 2px dashed #adb5bd;
+        }
+        .grid-cell.input {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .grid-cell.hidden {
+            background-color: #6c757d;
+            color: white;
+        }
+        .grid-cell.selected {
+            border: 3px solid #0d6efd;
+            box-shadow: 0 0 10px rgba(13, 110, 253, 0.5);
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .btn-action {
+            flex: 1;
+            padding: 12px;
+            font-weight: 600;
+            min-width: 150px;
+        }
+        .modal-content {
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+        .input-option {
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            line-height: 50px;
+            font-size: 20px;
+            font-weight: 500;
+            border: 2px solid #dee2e6;
+            margin: 5px;
+            border-radius: 5px;
+            background-color: white;
+            display: inline-block;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .input-option:hover {
+            transform: scale(1.1);
+            border-color: #0d6efd;
+        }
+        .input-option.number {
+            background-color: #e7f1ff;
+        }
+        .input-option.operator {
+            background-color: #d8f3dc;
+        }
+        .input-option.special {
+            background-color: #fff3cd;
+        }
+        .json-output {
+            background-color: #2b3035;
+            color: #dee2e6;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .grid-row {
+            display: flex;
+            margin-bottom: 5px;
+            justify-content: center;
+        }
+        @media (max-width: 768px) {
+            .grid-cell {
+                width: 50px;
+                height: 50px;
+                line-height: 50px;
+                font-size: 18px;
+            }
+        }
+        .button-field{
+            display:flex;
+            align-items:flex-end;
+        }
+        .button-field button{
+            width:100%;
+            padding:8px;
+            background:#0d6efd;
+            border:none;
+            border-radius:6px;
+
+            color:white;
+
+        }
+        .d-flex{
+            display:flex;
+            align-items:center;
+            
+        }
+        .gap-2{
+            gap:10px;
+        }
+
+    </style>
+</head>
+<body>
+    
+    <div class="card">
+        <div class="header" style="width:100%;">
+            <h1>Math Equation Grid Generator</h1>
+            <h1>{% if is_update %}Update Item{% else %}Create New Item{% endif %}</h1>  
+            <p class="lead">Create custom math equation grids and export them as JSON</p>
+        </div>
+         <div class="card">
+            <div class="card-header">Project Information</div>
+            <div class="card-body">
+                <form method="post">
+                {% csrf_token %}
+                <div class="row metadata-row">
+                    <div class="col-md-4">
+                        <label for="name" class="form-label"> Name</label>
+                        <input type="text" class="form-control" id="name" name="name" placeholder="Enter project name" value="{{ item.name|default:'' }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="projectTitle" class="form-label" for="title">Title</label>
+                        <input type="text" class="form-control" id="title" name="title" placeholder="Enter title" value="{{ item.title|default:'' }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="projectAuthor" class="form-label" for ="author">Author</label>
+                        <input type="text" class="form-control" id="author" name="author" placeholder="Enter author name" value="{{ item.author|default:'' }}" required>
+                    </div>
+                    
+                    
+                    
+                </div>
+                <div class="row metadata-row">
+                    <input type="hidden" id="gridInput" name="grid" value=''>
+                    <input type="hidden" id="solutionInput" name="solution" value=''>
+                <div class="col-md-4">
+                        <label for="created_by" class="form-label">Created by</label>
+                        <input type="text" class="form-control" id="created_by" name="created_by"  value="{% if item.created_by%} {{item.created_by.username}}{% else %}SuperUser {%endif %}" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="updated_by" class="form-label">Updated by</label>
+                        <input  class="form-control" id="updated_by" name="updated_by"  value="{% if item.updated_by %} {{ item.created_by.username}}{% else %}SuperUser{% endif%}" readonly>
+                    </div>
+                </div>
+             
+                    
+
+                </div>
+            </div>
+        </div>
+        
+
+        <div class="card">
+            <div class="card-header">Grid Configuration</div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label for="row" class="form-label">Number of Rows</label>
+                        <input type="number" class="form-control" id="rowsInput"  name="row" min="1" max="15" placeholder="Enter a Number" value="{{item.row|default:''}}" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="column" class="form-label">Number of Columns</label>
+                        <input type="number" class="form-control" id="colsInput" name="column"  min="1" max="15" placeholder="Enter a Number" value="{{item.column|default:""}}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label"for="difficulty">Difficulty</label>
+                        <div style="display:flex; gap:8px; align-items:stretch ;flex-wrap:nowrap;">
+                        <select class="form-control" id="difficulty" name="difficulty" class="form-select form-select-sm" style="width:350px; min-width:0; length:200px;" required>
+                        <option value="" disabled{% if not is_update %}selected{% endif %}>Select a difficulty </option>
+                        <option value="Easy"{% if item.difficulty == "Easy" %}selected{% endif %}>Easy</option>
+                        <option value="Medium"{% if item.difficulty == "Medium" %}selected{% endif %}>Medium</option>
+                        <option value="Hard"{% if item.difficulty == "Hard" %}selected{% endif %}>Hard</option>
+                        </select>
+                        
+                    
+                   
+                        <label class="form-label">&nbsp;</label>
+                        <button type="button" id="generateGrid"  class="btn btn-primary"style="width:330px;">Generate Grid</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">Math Grid</div>
+            <div class="card-body">
+                <div class="text-center">
+                    <div id="gridContainer" class="grid-container"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button type="button" id="setSolution" class="btn btn-success btn-action"><i class="fas fa-check-circle"></i> Set Solution</button>
+            <button type="button" id="validateGrid" class="btn btn-info btn-action"><i class="fas fa-check"></i> Validate Equations</button>
+            <button type="button" id="exportJson" class="btn btn-dark btn-action"><i class="fas fa-file-export"></i> Export JSON</button>
+            <button  type="button" id="resetGrid" class="btn btn-warning btn-action"><i class="fas fa-redo"></i> Reset Grid</button>
+        </div>
+
+        <div class="card">
+            <div class="card-header">JSON Output</div>
+            <div class="card-body">
+                <pre id="jsonOutput" class="json-output">// Your grid JSON will appear here</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cell Editor Modal -->
+    <div class="modal fade" id="cellEditorModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Cell: <span id="currentCellPos"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h6>Numbers</h6>
+                    <div class="mb-3">
+                        <div class="input-option number" data-value="0">0</div>
+                        <div class="input-option number" data-value="1">1</div>
+                        <div class="input-option number" data-value="2">2</div>
+                        <div class="input-option number" data-value="3">3</div>
+                        <div class="input-option number" data-value="4">4</div>
+                        <div class="input-option number" data-value="5">5</div>
+                        <div class="input-option number" data-value="6">6</div>
+                        <div class="input-option number" data-value="7">7</div>
+                        <div class="input-option number" data-value="8">8</div>
+                        <div class="input-option number" data-value="9">9</div>
+                    </div>
+                    
+                    <h6>Operators</h6>
+                    <div class="mb-3">
+                        <div class="input-option operator" data-value="+">+</div>
+                        <div class="input-option operator" data-value="-">-</div>
+                        <div class="input-option operator" data-value="×">×</div>
+                        <div class="input-option operator" data-value="÷">÷</div>
+                        <div class="input-option operator" data-value="=">=</div>
+                    </div>
+                    
+                    <h6>Special Values</h6>
+                    <div class="mb-3">
+                        <div class="input-option special" data-value="_">Blank</div>
+                        <div class="input-option special" data-value="null">Hidden</div>
+                        <div class="input-option special" data-value="clear">Clear</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="applyCellValue">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Solution Modal -->
+    <div class="modal fade" id="solutionModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Set Solution Value</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Enter the solution value for cell: <span id="solutionCellPos"></span></p>
+                    <div class="mb-3">
+                        <label for="solutionValue" class="form-label">Solution Value</label>
+                        <input type="number" class="form-control" id="solutionValue">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveSolution">Save Solution</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global variables
+        let gridData = [];
+        let solutionData = {};
+        let selectedCell = null;
+        let cellEditorModal = null;
+        let solutionModal = null;
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize modals
+            cellEditorModal = new bootstrap.Modal(document.getElementById('cellEditorModal'));
+            solutionModal = new bootstrap.Modal(document.getElementById('solutionModal'));
+            
+            // Generate initial grid
+             gridData = {{item.grid|safe|default:'[]'}};
+             solutionData = {{item.solution|safe|default:'{}'}};
+
+
+             renderGrid();          
+             updateJsonOutput();
+            
+            // Set up event listeners
+            setupEventListeners();
+        });
+
+        // Set up event listeners
+        function setupEventListeners() {
+            document.getElementById('generateGrid').addEventListener('click', generateGrid);
+            document.getElementById('setSolution').addEventListener('click', setSolution);
+            document.getElementById('validateGrid').addEventListener('click', validateGrid);
+            document.getElementById('exportJson').addEventListener('click', exportJson);
+            document.getElementById('resetGrid').addEventListener('click', resetGrid);
+            
+            // Input option event listeners
+            document.querySelectorAll('.input-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.input-option').forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                });
+            });
+            
+            // Apply cell value
+            document.getElementById('applyCellValue').addEventListener('click', applyCellValue);
+            
+            // Save solution
+            document.getElementById('saveSolution').addEventListener('click', saveSolution);
+        }
+
+        // Generate grid based on user input
+        function generateGrid() {
+            const rows = parseInt(document.getElementById('rowsInput').value);
+            const cols = parseInt(document.getElementById('colsInput').value);
+            
+            // Initialize grid data
+            gridData = [];
+            for (let i = 0; i < rows; i++) {
+                const row = [];
+                for (let j = 0; j < cols; j++) {
+                    row.push('_'); // Start with all empty cells
+                }
+                gridData.push(row);
+            }
+            
+            // Reset solution
+            solutionData = {};
+            
+            // Render grid
+            renderGrid();
+            
+            // Update JSON output
+            updateJsonOutput();
+        }
+
+        // Render the grid
+        function renderGrid() {
+            const gridContainer = document.getElementById('gridContainer');
+            gridContainer.innerHTML = '';
+            
+            // Create grid rows
+            for (let row = 0; row < gridData.length; row++) {
+                const gridRow = document.createElement('div');
+                gridRow.className = 'grid-row';
+                
+                for (let col = 0; col < gridData[row].length; col++) {
+                    const cellValue = gridData[row][col];
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    
+                    if (cellValue === null) {
+                        cell.classList.add('hidden');
+                        cell.innerHTML = '<i class="fas fa-question"></i>';
+                    } else if (cellValue === '_') {
+                        cell.classList.add('empty');
+                        cell.textContent = '';
+                    } else if (['+', '-', '×', '÷'].includes(cellValue)) {
+                        cell.classList.add('operator');
+                        cell.textContent = cellValue;
+                    } else if (cellValue === '=') {
+                        cell.classList.add('equals');
+                        cell.textContent = cellValue;
+                    } else {
+                        // Check if this cell has a solution
+                        const cellKey = `${row},${col}`;
+                        if (solutionData[cellKey] !== undefined) {
+                            cell.classList.add('input');
+                        } else {
+                            cell.classList.add('fixed');
+                        }
+                        cell.textContent = cellValue;
+                    }
+                    
+                    // Add click event
+                    cell.addEventListener('click', handleCellClick);
+                    
+                    gridRow.appendChild(cell);
+                }
+                
+                gridContainer.appendChild(gridRow);
+            }
+        }
+
+        // Handle cell click
+        function handleCellClick(event) {
+            const cell = event.target;
+            selectedCell = cell;
+            
+            // Remove previous selection
+            document.querySelectorAll('.grid-cell.selected').forEach(cell => {
+                cell.classList.remove('selected');
+            });
+            
+            // Select current cell
+            cell.classList.add('selected');
+            
+            // Show cell editor modal
+            document.getElementById('currentCellPos').textContent = 
+                `Row: ${cell.dataset.row}, Col: ${cell.dataset.col}`;
+            
+            // Clear previous selection in modal
+            document.querySelectorAll('.input-option').forEach(opt => opt.classList.remove('selected'));
+            
+            cellEditorModal.show();
+        }
+
+        // Apply cell value from modal
+        function applyCellValue() {
+            if (!selectedCell) return;
+            
+            const selectedOption = document.querySelector('.input-option.selected');
+            if (!selectedOption) return;
+            
+            const value = selectedOption.getAttribute('data-value');
+            const row = parseInt(selectedCell.dataset.row);
+            const col = parseInt(selectedCell.dataset.col);
+            
+            if (value === 'clear') {
+                // Clear cell
+                gridData[row][col] = '_';
+                
+                // Remove from solution if it was there
+                const cellKey = `${row},${col}`;
+                if (solutionData[cellKey] !== undefined) {
+                    delete solutionData[cellKey];
+                }
+            } else if (value === 'null') {
+                // Set as hidden cell
+                gridData[row][col] = null;
+            } else {
+                // Set cell value
+                gridData[row][col] = value;
+            }
+            
+            // Re-render grid
+            renderGrid();
+            
+            // Update JSON output
+            updateJsonOutput();
+            
+            // Hide modal
+            cellEditorModal.hide();
+        }
+
+        // Set solution for selected cell
+        function setSolution() {
+            if (!selectedCell) {
+                alert('Please select a cell first.');
+                return;
+            }
+            
+            const row = parseInt(selectedCell.dataset.row);
+            const col = parseInt(selectedCell.dataset.col);
+            
+            // Check if cell is editable (empty or hidden)
+            if (gridData[row][col] !== '_' && gridData[row][col] !== null) {
+                alert('You can only set solutions for empty or hidden cells.');
+                return;
+            }
+            
+            // Show solution modal
+            document.getElementById('solutionCellPos').textContent = 
+                `Row: ${row}, Col: ${col}`;
+            document.getElementById('solutionValue').value = '';
+            
+            solutionModal.show();
+        }
+
+        // Save solution value
+        function saveSolution() {
+            if (!selectedCell) return;
+            
+            const row = parseInt(selectedCell.dataset.row);
+            const col = parseInt(selectedCell.dataset.col);
+            const value = document.getElementById('solutionValue').value;
+            
+            if (!value) {
+                alert('Please enter a solution value.');
+                return;
+            }
+            
+            // Save solution
+            const cellKey = `${row},${col}`;
+            solutionData[cellKey] = parseInt(value);
+            
+            // Mark cell as input cell
+            if (gridData[row][col] === '_') {
+                gridData[row][col] = '?';
+            }
+            
+            // Re-render grid
+            renderGrid();
+            
+            // Update JSON output
+            updateJsonOutput();
+            
+            // Hide modal
+            solutionModal.hide();
+        }
+
+        // Validate equations in the grid
+        function validateGrid() {
+            // This would validate that equations are properly formed
+            // For simplicity, we'll just show a message
+            alert('Grid validation would check if equations are properly formed. This feature would be implemented in a complete version.');
+        }
+
+        // Export grid as JSON
+        function exportJson() {
+            const gridDataForExport = {
+                grid: gridData,
+                solution: solutionData
+            };
+            
+            const dataStr = JSON.stringify(gridDataForExport, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'math-grid.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+
+        // Update JSON output display
+        function updateJsonOutput() {
+            const gridDataForExport = {
+                grid: gridData,
+                solution: solutionData
+            };
+            
+            document.getElementById('jsonOutput').textContent = 
+                JSON.stringify(gridDataForExport, null, 2);
+
+                document.getElementById('gridInput').value=JSON.stringify(gridData);
+                document.getElementById('solutionInput').value=JSON.stringify(solutionData);
+        }
+
+        // Reset grid
+        function resetGrid() {
+            if (confirm('Are you sure you want to reset the grid? All changes will be lost.')) {
+                generateGrid();
+            }
+        }
+    </script>
+    <style>
+        .submit-btn{
+            background-color:green;
+            color:white;
+            padding:10px 30px;
+            border-radius:5px;
+            border:none;
+            cursor:pointer;
+            width:200px;
+        }
+        .cancel-btn{
+            background-color:blue;
+            color:white;
+            padding:10px 30px;
+            border-radius:5px;
+            text-decoration:none;
+            display:inline-block;
+            width:200px;
+            text-align:center;
+        }
+        .cancel-btn:hover{
+            background-color:#777;
+        }
+
+
+
+
+    </style>
+
+    <button type="submit" class="submit-btn">
+        {%if is_update%}Update {% else%}Create {%endif%}
+    </button>
+    <a href="{% url 'create_puzzles:item-list'%}" class="cancel-btn"> Cancel</a>
+</form>
+</body>
+</html>

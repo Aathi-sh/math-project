@@ -1,33 +1,35 @@
 from django.db import models
-from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator,MaxValueValidator
+from django.core.validators import MaxValueValidator,MinValueValidator
+from django.contrib.auth.models import User
 
-# Create your models here.
-User =get_user_model()
+class Item(models.Model):
+    DIFFICULTY_CHOICES = (
+        ('Easy', 'Easy'),
+        ('Medium', 'Medium'),
+        ('Hard', 'Hard'),
+    )
 
-class MathPuzzle(models.Model):
-    name = models.TextField(max_length=20,default="")
-    title =models.TextField()
-    author = models.ForeignKey(User,on_delete=models.CASCADE,related_name='authored_puzzles')
-    row = models.SmallIntegerField(validators=[MinValueValidator(1),MaxValueValidator(20)])
-    cols = models.SmallIntegerField(validators=[MinValueValidator(1),MaxValueValidator(20)])
-    DIFFICULTY_CHOICES =[
-        ('easy','easy'),
-        ('medium','medium'),
-        ('hard','hard')
-    ]
-    difficulty = models.CharField(max_length=15,choices=DIFFICULTY_CHOICES,default='easy')
-    grid = models.JSONField(blank=True,null=True,default=list)
-    solution = models.JSONField(blank=True,null=True,default=dict)
-    created_by = models.ForeignKey(User,on_delete=models.SET_NULL,null= True,blank = True,related_name="created_puzzles" )
-    updated_by = models.ForeignKey(User,on_delete=models.CASCADE,related_name='updated_puzzless')
-    created_at=models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    active = models.BooleanField(default=True)
+    name = models.CharField(max_length=100)
+    title = models.CharField(max_length=100)
+    author = models.CharField(max_length=100)
+    difficulty = models.CharField(max_length=20, choices=DIFFICULTY_CHOICES)
+    row = models.SmallIntegerField(validators=[MinValueValidator(1),MaxValueValidator(20)],
+                                   help_text="Enter a number between 1 and 20")
+    column = models.SmallIntegerField(validators=[MinValueValidator(1),MaxValueValidator(20)],
+                                        help_text="Enter a number between 1 and 20")
+    grid = models.JSONField(default=list)  # Store the grid as a list of lists
+    solution = models.JSONField(default=dict)  # Store the solution as a dictionary
     
-    class meta:
-        db_table ='math_puzzless'
-        ordering =['-id']
-        
-        def __str__(self):
-            return self.title
+    # Automatically set when the object is created
+    created_at = models.DateTimeField(auto_now_add=True)
+    # Automatically set every time the object is saved
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    created_by = models.ForeignKey (User,related_name='created_by_items',
+    on_delete =models.SET_NULL,null=True,blank=True)
+    updated_by = models.ForeignKey(User,related_name='updated_by_items',
+    on_delete =models.SET_NULL,null=True,blank=True)
+    active = models.BooleanField(default=True)
+
+    def _str_(self):
+        return self.title

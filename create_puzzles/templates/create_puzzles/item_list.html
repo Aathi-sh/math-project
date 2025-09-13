@@ -1,8 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
+{% extends 'layouts/base.html' %}
+{% block title %} Table List{% endblock title %}
+{% block bodyclass %} hold-transition sidebar-mini {% endblock bodyclass %}
+{% load static %}
     <title>Table List</title>
+    {% block extrastyle %}
+    
     <style>
         body {
             font-family: 'Segoe UI', Roboto, sans-serif;
@@ -204,14 +206,15 @@
             border-color: #4CAF50;
         }
     </style>
-</head>
-<body>
+    {%endblock extrastyle %}
+     {% block content %}
+<div class="content-wrapper kanban">
     <div class="container">
         <h1> Table List</h1>
 
         <div class="search-bar">
             <form method="get" id="searchForm">
-            <input type="text" id="searchInput"name="q" placeholder=" Search by ID, Author, Title, Name, Created By, Updated By..." value="{{ query }}">
+            <input type="text" id="searchInput"name="q" style="width:750px;" placeholder=" Search by ID, Author, Title, Name, Created By, Updated By..." value="{{ query }}">
             <input type="hidden" name="sort_by" value="{{ sort_by }}">
             <input type="hidden" name="order" value="{{ order }}">
             </form>
@@ -285,6 +288,10 @@
             {% endif %}
         </div>
     </div>
+    </div>
+    {% endblock content %}
+
+    {% block extra_scripts %}
 <script>
   const searchInput = document.getElementById('searchInput');
   const searchForm = document.getElementById('searchForm');
@@ -299,5 +306,4 @@
   });
 
 </script>
-</body>
-</html>
+    {% endblock extra_scripts %}

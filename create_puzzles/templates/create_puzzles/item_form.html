@@ -1,12 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% extends 'layouts/base.html' %}
+{% block title %} create form {% endblock title %}
+{% block bodyclass %} hold-transition sidebar-mini {% endblock bodyclass %}
     <title> {% if is_update%}Update item {% else%} Create item {%endif%}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% block extrastyle %}
     <style>
+
         body {
             background-color: #f8f9fa;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -38,6 +38,7 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
             border: none;
+            margin-left:10px;
         }
         .card-header {
             background-color: #f1f8ff;
@@ -191,11 +192,37 @@
         .gap-2{
             gap:10px;
         }
+        .submit-btn{
+            background-color:green;
+            color:white;
+            padding:10px 30px;
+            border-radius:5px;
+            border:none;
+            cursor:pointer;
+            width:200px;
+            margin-left:10px;
+        }
+        .cancel-btn{
+            background-color:blue;
+            color:white;
+            padding:10px 30px;
+            border-radius:5px;
+            text-decoration:none;
+            display:inline-block;
+            width:200px;
+            text-align:center;
+        }
+        .cancel-btn:hover{
+            background-color:#777;
+        }
+
 
     </style>
-</head>
-<body>
-    
+
+    {% endblock extrastyle %}
+
+    {% block content %}
+    <div class="content-wrapper ">
     <div class="card">
         <div class="header" style="width:100%;">
             <h1>Math Equation Grid Generator</h1>
@@ -265,7 +292,7 @@
                         <option value="Medium"{% if item.difficulty == "Medium" %}selected{% endif %}>Medium</option>
                         <option value="Hard"{% if item.difficulty == "Hard" %}selected{% endif %}>Hard</option>
                         </select>
-                        
+                    
                     
                    
                         <label class="form-label">&nbsp;</label>
@@ -286,7 +313,7 @@
         </div>
 
         <div class="controls">
-            <button type="button" id="setSolution" class="btn btn-success btn-action"><i class="fas fa-check-circle"></i> Set Solution</button>
+            <button type="button" id="setSolution" style="margin-left:10px;" class="btn btn-success btn-action"><i class="fas fa-check-circle"></i> Set Solution</button>
             <button type="button" id="validateGrid" class="btn btn-info btn-action"><i class="fas fa-check"></i> Validate Equations</button>
             <button type="button" id="exportJson" class="btn btn-dark btn-action"><i class="fas fa-file-export"></i> Export JSON</button>
             <button  type="button" id="resetGrid" class="btn btn-warning btn-action"><i class="fas fa-redo"></i> Reset Grid</button>
@@ -369,7 +396,9 @@
             </div>
         </div>
     </div>
-
+    </div>
+       
+      {% block extra_scripts %}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Global variables
@@ -658,39 +687,18 @@
             }
         }
     </script>
-    <style>
-        .submit-btn{
-            background-color:green;
-            color:white;
-            padding:10px 30px;
-            border-radius:5px;
-            border:none;
-            cursor:pointer;
-            width:200px;
-        }
-        .cancel-btn{
-            background-color:blue;
-            color:white;
-            padding:10px 30px;
-            border-radius:5px;
-            text-decoration:none;
-            display:inline-block;
-            width:200px;
-            text-align:center;
-        }
-        .cancel-btn:hover{
-            background-color:#777;
-        }
+    {% endblock extra_scripts %}
+        
 
 
 
-
-    </style>
-
-    <button type="submit" class="submit-btn">
-        {%if is_update%}Update {% else%}Create {%endif%}
-    </button>
-    <a href="{% url 'create_puzzles:item-list'%}" class="cancel-btn"> Cancel</a>
+  
+   
+     <button type="submit" class="submit-btn" style="margin-left:260px;">
+         {%if is_update%}Update {% else%}Create {%endif%}
+       </button>
+       
+ 
 </form>
-</body>
-</html>
+
+ {% endblock content %}

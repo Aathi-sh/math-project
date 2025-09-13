@@ -41,10 +41,25 @@
     {% endif %}
     <li class="nav-item" >
       <a href="{% url 'create_puzzles:item-list' %}" class ="nav-link">
-        <i class="nav-icon fas fa-puzzle-piece"></i>
-        <p> Create puzzles </p>
+        <i class="nav-icon fas fa-table"></i>
+        <p> Data Tables </p>
       </a>
     </li>
+    <li class="nav-item" >
+      <a href="{% url 'create_puzzles:item-create' %}" class ="nav-link {% if 'create_puzzles:item-create' in segment %} active {% endif %}">
+        <i class="nav-icon fas fa-puzzle-piece"></i>
+        <p> Create Form</p>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="{% url 'examples_kanban' %}" class="nav-link {% if 'kanban_board' in segment %} active {% endif %}">
+        <i class="nav-icon fas fa-columns"></i>
+        <p>
+          Kanban Board
+        </p>
+      </a>
+    </li>
+
 
     <li class="nav-item {% if 'apps' in parent %} menu-open {% endif %}">
       <a href="#" class="nav-link {% if 'apps' in parent %} active {% endif %}">

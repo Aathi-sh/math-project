@@ -223,29 +223,28 @@
 
     {% block content %}
     <div class="content-wrapper ">
+      <!--
     <div class="card">
         <div class="header" style="width:100%;">
             <h1>Math Equation Grid Generator</h1>
-            <h1>{% if is_update %}Update Item{% else %}Create New Item{% endif %}</h1>  
+             
             <p class="lead">Create custom math equation grids and export them as JSON</p>
         </div>
+    -->
          <div class="card">
-            <div class="card-header">Project Information</div>
+            <div class="card-header">(Project Information) enga enna sonninga nu marante na</div>
+         
             <div class="card-body">
                 <form method="post">
                 {% csrf_token %}
                 <div class="row metadata-row">
                     <div class="col-md-4">
-                        <label for="name" class="form-label"> Name</label>
-                        <input type="text" class="form-control" id="name" name="name" placeholder="Enter project name" value="{{ item.name|default:'' }}" required>
+                        <label for="name" class="form-label"> Title </label>
+                        <input type="text" class="form-control" id="name" name="name" placeholder="Enter Title" value="{{ item.name|default:'' }}" required>
                     </div>
                     <div class="col-md-4">
-                        <label for="projectTitle" class="form-label" for="title">Title</label>
-                        <input type="text" class="form-control" id="title" name="title" placeholder="Enter title" value="{{ item.title|default:'' }}" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label for="projectAuthor" class="form-label" for ="author">Author</label>
-                        <input type="text" class="form-control" id="author" name="author" placeholder="Enter author name" value="{{ item.author|default:'' }}" required>
+                        <label for="projectTitle" class="form-label" for="title"> Description </label>
+                        <input type="text" class="form-control" id="title" name="title" placeholder="Add a Description" value="{{ item.title|default:'' }}" required>
                     </div>
                     
                     
@@ -254,15 +253,7 @@
                 <div class="row metadata-row">
                     <input type="hidden" id="gridInput" name="grid" value=''>
                     <input type="hidden" id="solutionInput" name="solution" value=''>
-                <div class="col-md-4">
-                        <label for="created_by" class="form-label">Created by</label>
-                        <input type="text" class="form-control" id="created_by" name="created_by"  value="{% if item.created_by%} {{item.created_by.username}}{% else %}SuperUser {%endif %}" readonly>
-                    </div>
-                    <div class="col-md-4">
-                        <label for="updated_by" class="form-label">Updated by</label>
-                        <input  class="form-control" id="updated_by" name="updated_by"  value="{% if item.updated_by %} {{ item.created_by.username}}{% else %}SuperUser{% endif%}" readonly>
-                    </div>
-                </div>
+                   
              
                     
 
@@ -284,7 +275,7 @@
                         <input type="number" class="form-control" id="colsInput" name="column"  min="1" max="15" placeholder="Enter a Number" value="{{item.column|default:""}}" required>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label"for="difficulty">Difficulty</label>
+                        <label class="form-label"for="difficulty"> Level </label>
                         <div style="display:flex; gap:8px; align-items:stretch ;flex-wrap:nowrap;">
                         <select class="form-control" id="difficulty" name="difficulty" class="form-select form-select-sm" style="width:350px; min-width:0; length:200px;" required>
                         <option value="" disabled{% if not is_update %}selected{% endif %}>Select a difficulty </option>

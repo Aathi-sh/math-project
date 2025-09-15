@@ -1,8 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
+{% extends 'layouts/base.html' %}
+{% load static %}
+{% block title %} Confim Delete {% endblock title %}
+ {% block bodyclass %} hold-transition sidebar-mini {% endblock bodyclass %}
+
+
     <title>Confirm Delete</title>
+   
     <style>
         body {
             font-family: sans-serif;
@@ -62,8 +65,12 @@
             background-color: #777;
         }
     </style>
-</head>
-<body>
+  
+
+   
+
+    {% block content %}
+
     <div class="delete-container">
         <h1>Confirm Deletion</h1>
         <p>Are you sure you want to delete the following item?</p>
@@ -80,5 +87,4 @@
             </div>
         </form>
     </div>
-</body>
-</html>
+    {% endblock content %}

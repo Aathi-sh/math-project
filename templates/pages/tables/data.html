@@ -1,177 +1,208 @@
 {% extends 'layouts/base.html' %}
 {% load static %}
-{% block title %} Data Tables {% endblock title %}
+{% block title %} Cross Math Game {% endblock title %}
+
 {% block extrastyle %}
 <!-- DataTables -->
 <link rel="stylesheet" href="{% static 'plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}">
 <link rel="stylesheet" href="{% static 'plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
 <link rel="stylesheet" href="{% static 'plugins/datatables-buttons/css/buttons.bootstrap4.min.css' %}">
-{% endblock extrastyle %}
-{% block bodyclass %} hold-transition sidebar-mini {% endblock bodyclass %}
-{% block content %}
-  <!-- Content Wrapper. Contains page content -->
-  <div class="content-wrapper">
-    <!-- Content Header (Page header) -->
-    <section class="content-header">
-      <div class="container-fluid">
-        <div class="row mb-2">
-          <div class="col-sm-6">
-            <h1>Data Tables</h1>
-          </div>
-          <div class="col-sm-6">
-            <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="#">Home</a></li>
-              <li class="breadcrumb-item active">DataTables</li>
-            </ol>
-          </div>
-        </div>
-      </div><!-- /.container-fluid -->
-    </section>
 
-    <!-- Main content -->
-    <section class="content">
-      <div class="container-fluid">
-        <div class="row">
-          <div class="col-12">
-            <div class="card">
-              <div class="card-header">
-                <h1>{% if is_update %}Update Item{% else %}Create New Item{% endif %}</h1> 
-                <h3 class="card-title">DataTable with minimal features & hover style</h3>
-              </div>
-              <!-- /.card-header -->
-              <div class="card-body">
-                <a href="{% url 'create_puzzles:item-create' %}" class="btn btn-primary mb-3"> Create New Item</a>
-                <table id="example2" class="table table-bordered table-hover">
-                  <thead>
+<style>
+  .truncate{
+    max-width: 150px; /* Adjust the width as needed */
+    white-space: nowrap;  
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+  }
+</style>
+{% endblock extrastyle %}
+
+{% block bodyclass %} hold-transition sidebar-mini {% endblock bodyclass %}
+
+{% block content %}
+<div class="content-wrapper">
+  <!-- Content Header (Page header) -->
+  <section class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1>Cross Math Game</h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="#">Home</a></li>
+            <li class="breadcrumb-item active">DataTables</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main content -->
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12">
+          <!-- Card: Create Button + Table -->
+          <div class="card">
+            <div class="card-header">
+              
+           
+            <div class="card-body">
+              <a href="{% url 'create_puzzles:item-create' %}" class="btn btn-primary mb-3"> Create New Item</a>
+              <table id="example2" class="table table-bordered table-hover">
+                <thead>
                   <tr>
-                    <th> ID </th>
-                    <th> Name </th>
-                    <th> Author </th>
-                    <th> Row </th>
-                    <th> Column </th>
-                    <th> Difficulty </th>
-                    <th> Grid </th>
-                    <th> Solution</th>
-                    <th> Created At </th>
-                    <th> Updated At </th>
-                    <th> Created By </th>
-                    <th> Updated By </th>
-                    <th> Options </th>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Author</th>
+                    <th>Row</th>
+                    <th>Column</th>
+                    <th>Difficulty</th>
+                    <th>Grid</th>
+                    <th>Solution</th>
+                    <th>Created At</th>
+                    <th>Updated At</th>
+                    <th>Created By</th>
+                    <th>Updated By</th>
+                    <th>Options</th>
                   </tr>
-                  </thead>
-                  <tbody>
-                    {% if page_obj.object_list %}
-                {% for item in page_obj %}
-                <tr>
+                </thead>
+                <tbody id="tableBody">
+                  {% for item in items %}
+                  <tr>
                     <td>{{ item.id }}</td>
-                    <td>{{ item.name }}</td>
                     <td>{{ item.title }}</td>
+                    <td>{{ item.name }}</td>
                     <td>{{ item.author }}</td>
                     <td>{{ item.row }}</td>
                     <td>{{ item.column }}</td>
                     <td>{{ item.difficulty }}</td>
-                    <td>{{ item.row}} </td>
-                    <td> {{ item.column}} </td>
+                    <td class="truncate" title="{{ item.grid|escape }}">{{ item.grid| truncatechars:50}}</td>
+                    <td class="truncate" title ="{{ item.solution|escape }}">{{item.solution| truncatechars:50}}</td>
                     <td>{{ item.created_at|date:"Y-m-d H:i" }}</td>
                     <td>{{ item.updated_at|date:"Y-m-d H:i" }}</td>
-                    <td>{% if item.created_by %} {{ item.created_by.username }} {% else %} Superuser {% endif %}</td>
-                    <td>{% if item.updated_by %} {{ item.updated_by.username }} {% else %} Superuser {% endif %}</td>
-                    <td> {{ item.active }} </td>
-                    
-                    
+                    <td>{{ item.created_by }}</td>
+                    <td>{{ item.updated_by }}</td>
                     <td>
-                        <a href="{% url 'create_puzzles:item-update' item.pk %}">Update</a> <br>
-                        <a href="{% url 'create_puzzles:item-confirm-delete' item.pk %}">Delete </a>
-                          
+                      <a href="{% url 'create_puzzles:item-update' item.pk %}" class="btn btn-sm btn-warning">Update</a>
+                      <a href="{% url 'create_puzzles:item-confirm-delete' item.pk %}" class="btn btn-sm btn-danger">Delete</a>
                     </td>
-                </tr>
-                {% endfor %}
-                {% endif%}
-            </tbody>
-                  
-                       
-                  <tfoot>
-                  <tr>
-                   <th> ID </th>
-                    <th> Name </th>
-                    <th> Author </th>
-                    <th> Row </th>
-                    <th> Column </th>
-                    <th> Difficulty </th>
-                    <th> Grid </th>
-                    <th> Solution</th>
-                    <th> Created At </th>
-                    <th> Updated At </th>
-                    <th> Created By </th>
-                    <th> Updated By </th>
-                    <th> Options </th>
                   </tr>
-                  </tfoot>
-                </table>
-              </div>
-              <!-- /.card-body -->
+                  {% empty %}
+                  <tr>
+                    <td colspan="14" class="text-center">No items found</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Author</th>
+                    <th>Row</th>
+                    <th>Column</th>
+                    <th>Difficulty</th>
+                    <th>Grid</th>
+                    <th>Solution</th>
+                    <th>Created At</th>
+                    <th>Updated At</th>
+                    <th>Created By</th>
+                    <th>Updated By</th>
+                    <th>Options</th>
+                  </tr>
+                </tfoot>
+              </table>
             </div>
-            <!-- /.card -->
-
-            <div class="card">
-              <div class="card-header">
-                <h3 class="card-title">DataTable with default features</h3>
-              </div>
-              <!-- /.card-header -->
-              <div class="card-body">
-                <table id="example1" class="table table-bordered table-striped">
-                  <thead>
-                  <tr>
-                    <th> ID </th>
-                    <th> Name </th>
-                    <th> Author </th>
-                    <th> Row </th>
-                    <th> Column </th>
-                    <th> Difficulty </th>
-                    <th> Grid </th>
-                    <th> Solution</th>
-                    <th> Created At </th>
-                    <th> Updated At </th>
-                    <th> Created By </th>
-                    <th> Updated By </th>
-                    <th> Options </th>
-                  </tr>
-                  </thead>
-                  
-                  <tfoot>
-                  <tr>
-                   <th> ID </th>
-                    <th> Name </th>
-                    <th> Author </th>
-                    <th> Row </th>
-                    <th> Column </th>
-                    <th> Difficulty </th>
-                    <th> Grid </th>
-                    <th> Solution</th>
-                    <th> Created At </th>
-                    <th> Updated At </th>
-                    <th> Created By </th>
-                    <th> Updated By </th>
-                    <th> Options </th>
-                  </tr>
-                  </tfoot>
-                </table>
-              </div>
-              <!-- /.card-body -->
-            </div>
-            <!-- /.card -->
           </div>
-          <!-- /.col -->
+
+          <!-- Card: DataTable default features -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">DataTable with default features</h3>
+            </div>
+            <div class="card-body">
+              <table id="example1" class="table table-bordered table-striped">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Author</th>
+                    <th>Row</th>
+                    <th>Column</th>
+                    <th>Difficulty</th>
+                    <th>Grid</th>
+                    <th>Solution</th>
+                    <th>Created At</th>
+                    <th>Updated At</th>
+                    <th>Created By</th>
+                    <th>Updated By</th>
+                    <th>Options</th>
+                  </tr>
+                </thead>
+                <tbody id="tableBody">
+                  {% for item in items %}
+                  <tr>
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.title }}</td>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.author }}</td>
+                    <td>{{ item.row }}</td>
+                    <td>{{ item.column }}</td>
+                    <td class="truncate" title="{{ item.grid|escape }}">{{ item.grid| truncatechars:50}}</td>
+                    <td class="truncate" title ="{{ item.solution|escape }}">{{item.solution| truncatechars:50}}</td>
+                    <td>{{ item.solution|safe }}</td>
+                    <td>{{ item.created_at|date:"Y-m-d H:i" }}</td>
+                    <td>{{ item.updated_at|date:"Y-m-d H:i" }}</td>
+                    <td>{{ item.created_by }}</td>
+                    <td>{{ item.updated_by }}</td>
+                    <td>
+                      <a href="{% url 'create_puzzles:item-update' item.pk %}" class="btn btn-sm btn-warning">Update</a>
+                      <a href="{% url 'create_puzzles:item-confirm-delete' item.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                    </td>
+                  </tr>
+                  {% empty %}
+                  <tr>
+                    <td colspan="14" class="text-center">No items found</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Author</th>
+                    <th>Row</th>
+                    <th>Column</th>
+                    <th>Difficulty</th>
+                    <th>Grid</th>
+                    <th>Solution</th>
+                    <th>Created At</th>
+                    <th>Updated At</th>
+                    <th>Created By</th>
+                    <th>Updated By</th>
+                    <th>Options</th>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+
         </div>
-        <!-- /.row -->
       </div>
-      <!-- /.container-fluid -->
-    </section>
-    <!-- /.content -->
-  </div>
+    </div>
+  </section>
+</div>
 {% endblock content %}
+
 {% block extra_scripts %}
-<!-- DataTables  & Plugins -->
+<!-- DataTables & Plugins -->
 <script src="{% static 'plugins/datatables/jquery.dataTables.min.js' %}"></script>
 <script src="{% static 'plugins/datatables-bs4/js/dataTables.bootstrap4.min.js' %}"></script>
 <script src="{% static 'plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
@@ -184,7 +215,7 @@
 <script src="{% static 'plugins/datatables-buttons/js/buttons.html5.min.js' %}"></script>
 <script src="{% static 'plugins/datatables-buttons/js/buttons.print.min.js' %}"></script>
 <script src="{% static 'plugins/datatables-buttons/js/buttons.colVis.min.js' %}"></script>
-<!-- Page specific script -->
+
 <script>
   $(function () {
     $("#example1").DataTable({

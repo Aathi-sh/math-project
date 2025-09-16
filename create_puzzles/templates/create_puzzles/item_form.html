@@ -6,23 +6,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     {% block extrastyle %}
     <style>
-
         body {
             background-color: #f8f9fa;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             padding: 20px;
         }
         .container {
-            width:100%;
-            padding:0;
-            margin:0;
-            
-            
-        }
-        .custom-container{
-            max-width:960px;
-            length:100%;
-            padding:20px;
+            max-width: 1200px;
+            margin: 0 auto;
         }
         .header {
             text-align: center;
@@ -38,7 +29,6 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
             border: none;
-            margin-left:10px;
         }
         .card-header {
             background-color: #f1f8ff;
@@ -136,8 +126,13 @@
             transition: all 0.2s;
         }
         .input-option:hover {
-            transform: scale(1.1);
+            transform: scale(1.05);
             border-color: #0d6efd;
+        }
+        .input-option.selected {
+            border: 3px solid #0d6efd;
+            box-shadow: 0 0 10px rgba(13, 110, 253, 0.5);
+            transform: scale(1.05);
         }
         .input-option.number {
             background-color: #e7f1ff;
@@ -161,6 +156,29 @@
             display: flex;
             margin-bottom: 5px;
             justify-content: center;
+        }
+        .choices-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .choice-item {
+            display: flex;
+            align-items: center;
+            background-color: #e9ecef;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+        .choice-remove {
+            margin-left: 8px;
+            cursor: pointer;
+            color: #dc3545;
+        }
+        .choice-input-group {
+            display: flex;
+            margin-bottom: 10px;
         }
         @media (max-width: 768px) {
             .grid-cell {
@@ -215,13 +233,9 @@
         .cancel-btn:hover{
             background-color:#777;
         }
-
-
     </style>
-
     {% endblock extrastyle %}
-
-    {% block content %}
+    {% block content%}
     <div class="content-wrapper ">
       <!--
     <div class="card">
@@ -253,6 +267,8 @@
                 <div class="row metadata-row">
                     <input type="hidden" id="gridInput" name="grid" value=''>
                     <input type="hidden" id="solutionInput" name="solution" value=''>
+                    <!-- ADDED: hidden input for choices so Django receives it -->
+                    <input type="hidden" id="choicesInput" name="choices" value=''>
                    
              
                     
@@ -262,7 +278,7 @@
         </div>
         
 
-        <div class="card">
+       <div class="card">
             <div class="card-header">Grid Configuration</div>
             <div class="card-body">
                 <div class="row mb-3">
@@ -285,8 +301,7 @@
                         </select>
                     
                     
-                   
-                        <label class="form-label">&nbsp;</label>
+                    <label class="form-label">&nbsp;</label>
                         <button type="button" id="generateGrid"  class="btn btn-primary"style="width:330px;">Generate Grid</button>
                         </div>
                     </div>
@@ -303,11 +318,24 @@
             </div>
         </div>
 
+        <div class="card">
+            <div class="card-header">Answer Choices</div>
+            <div class="card-body">
+                <div class="choice-input-group">
+                    <input type="number" class="form-control" id="newChoiceInput" placeholder="Enter a number" >
+                    <button type="button" class="btn btn-primary ms-2" id="addChoiceBtn">Add Choice</button>
+                </div>
+                <div id="choicesContainer" class="choices-container">
+                    <!-- Choices will be added here -->
+                </div>
+            </div>
+        </div>
+
         <div class="controls">
-            <button type="button" id="setSolution" style="margin-left:10px;" class="btn btn-success btn-action"><i class="fas fa-check-circle"></i> Set Solution</button>
-            <button type="button" id="validateGrid" class="btn btn-info btn-action"><i class="fas fa-check"></i> Validate Equations</button>
-            <button type="button" id="exportJson" class="btn btn-dark btn-action"><i class="fas fa-file-export"></i> Export JSON</button>
-            <button  type="button" id="resetGrid" class="btn btn-warning btn-action"><i class="fas fa-redo"></i> Reset Grid</button>
+            <button type ="button" id="setSolutionBtn" class="btn btn-success btn-action"><i class="fas fa-check-circle"></i> Set Solution</button>
+            <button  type ="button" id="validateGrid" class="btn btn-info btn-action"><i class="fas fa-check"></i> Validate Equations</button>
+            <button type ="button" id="exportJson" class="btn btn-dark btn-action"><i class="fas fa-file-export"></i> Export JSON</button>
+            <button type ="button"  id="resetGrid" class="btn btn-warning btn-action"><i class="fas fa-redo"></i> Reset Grid</button>
         </div>
 
         <div class="card">
@@ -371,7 +399,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Set Solution Value</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button"  class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <p>Enter the solution value for cell: <span id="solutionCellPos"></span></p>
@@ -387,14 +415,14 @@
             </div>
         </div>
     </div>
-    </div>
-       
-      {% block extra_scripts %}
+     {% block extra_scripts %}
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Global variables
         let gridData = [];
         let solutionData = {};
+        let choices = [];
         let selectedCell = null;
         let cellEditorModal = null;
         let solutionModal = null;
@@ -406,11 +434,12 @@
             solutionModal = new bootstrap.Modal(document.getElementById('solutionModal'));
             
             // Generate initial grid
-             gridData = {{item.grid|safe|default:'[]'}};
-             solutionData = {{item.solution|safe|default:'{}'}};
-
-
-             renderGrid();          
+            gridData = {{item.grid|safe|default:'[]'}};
+            solutionData = {{item.solution|safe|default:'{}'}};
+            choices = {{item.choices|safe|default:'[]'}}; // ADDED: preload saved choices if editing
+            
+             renderGrid();
+             renderChoices();  // ADDED: render any existing choices
              updateJsonOutput();
             
             // Set up event listeners
@@ -420,10 +449,15 @@
         // Set up event listeners
         function setupEventListeners() {
             document.getElementById('generateGrid').addEventListener('click', generateGrid);
-            document.getElementById('setSolution').addEventListener('click', setSolution);
+            document.getElementById('setSolutionBtn').addEventListener('click', setSolution);
             document.getElementById('validateGrid').addEventListener('click', validateGrid);
             document.getElementById('exportJson').addEventListener('click', exportJson);
             document.getElementById('resetGrid').addEventListener('click', resetGrid);
+            document.getElementById('addChoiceBtn').addEventListener('click', function(event){
+                event.preventDefault();
+                addChoice();
+                return false;
+            })
             
             // Input option event listeners
             document.querySelectorAll('.input-option').forEach(option => {
@@ -438,6 +472,13 @@
             
             // Save solution
             document.getElementById('saveSolution').addEventListener('click', saveSolution);
+            
+            // Allow pressing Enter to add choices
+            document.getElementById('newChoiceInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addChoice();
+                }
+            });
         }
 
         // Generate grid based on user input
@@ -534,6 +575,19 @@
             
             // Clear previous selection in modal
             document.querySelectorAll('.input-option').forEach(opt => opt.classList.remove('selected'));
+            
+            // Pre-select the current value if it exists
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+            const currentValue = gridData[row][col];
+            
+            if (currentValue && currentValue !== '_' && currentValue !== null) {
+                document.querySelectorAll('.input-option').forEach(opt => {
+                    if (opt.getAttribute('data-value') == currentValue) {
+                        opt.classList.add('selected');
+                    }
+                });
+            }
             
             cellEditorModal.show();
         }
@@ -632,6 +686,65 @@
             solutionModal.hide();
         }
 
+        // Add a new choice
+        function addChoice() {
+            const input = document.getElementById('newChoiceInput');
+            const value = parseInt(input.value);
+            
+            if (isNaN(value)) {
+                alert('Please enter a valid number.');
+                return;
+            }
+            
+            choices.push(value);
+            renderChoices();
+            
+            // Clear input
+            input.value = '';
+            input.focus();
+            
+            // Update JSON output
+            updateJsonOutput();
+        }
+
+        // Remove a choice
+        function removeChoice(index) {
+            choices.splice(index, 1);
+            renderChoices();
+            
+            // Update JSON output
+            updateJsonOutput();
+            //hide solutionModal
+            solutionModal.hide();
+        }
+
+        // Render choices
+        function renderChoices() {
+            const container = document.getElementById('choicesContainer');
+            container.innerHTML = '';
+            
+            if (choices.length === 0) {
+                container.innerHTML = '<p class="text-muted">No choices added yet.</p>';
+                return;
+            }
+            
+            choices.forEach((choice, index) => {
+                const choiceElement = document.createElement('div');
+                choiceElement.className = 'choice-item';
+                choiceElement.innerHTML = `
+                    ${choice}
+                    <span class="choice-remove" data-index="${index}">
+                        <i class="fas fa-times"></i>
+                    </span>
+                `;
+                
+                const removeBtn = choiceElement.querySelector('.choice-remove');
+                removeBtn.addEventListener('click', () => removeChoice(index));
+                
+                container.appendChild(choiceElement);
+            });
+        }
+
         // Validate equations in the grid
         function validateGrid() {
             // This would validate that equations are properly formed
@@ -643,7 +756,8 @@
         function exportJson() {
             const gridDataForExport = {
                 grid: gridData,
-                solution: solutionData
+                solution: solutionData,
+                choices: choices
             };
             
             const dataStr = JSON.stringify(gridDataForExport, null, 2);
@@ -661,30 +775,28 @@
         function updateJsonOutput() {
             const gridDataForExport = {
                 grid: gridData,
-                solution: solutionData
+                solution: solutionData,
+                choices: choices
             };
             
             document.getElementById('jsonOutput').textContent = 
                 JSON.stringify(gridDataForExport, null, 2);
 
-                document.getElementById('gridInput').value=JSON.stringify(gridData);
+                 document.getElementById('gridInput').value=JSON.stringify(gridData);
                 document.getElementById('solutionInput').value=JSON.stringify(solutionData);
+                document.getElementById('choicesInput').value=JSON.stringify(choices); // ADDED
         }
 
         // Reset grid
         function resetGrid() {
             if (confirm('Are you sure you want to reset the grid? All changes will be lost.')) {
                 generateGrid();
+                choices = [];
+                renderChoices();
             }
         }
-    </script>
-    {% endblock extra_scripts %}
-        
-
-
-
-  
-   
+    </script>   
+    {% endblock extra_scripts  %}
      <button type="submit" class="submit-btn" style="margin-left:260px;">
          {%if is_update%}Update {% else%}Create {%endif%}
        </button>

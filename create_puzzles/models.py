@@ -20,6 +20,7 @@ class Item(models.Model):
     grid = models.JSONField(default=list)  # Store the grid as a list of lists
     solution = models.JSONField(default=dict)  # Store the solution as a dictionary
     
+    choices = models.JSONField(default=list)  # Store the choices as a list
     # Automatically set when the object is created
     created_at = models.DateTimeField(auto_now_add=True)
     # Automatically set every time the object is saved

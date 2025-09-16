@@ -4,6 +4,7 @@ from django.utils import timezone
 from .models import Item
 
 
+
 #  List all items
 def item_list(request):
     items = Item.objects.all()
@@ -22,6 +23,7 @@ def item_create(request):
             column=int(request.POST.get('column') or 0),
             grid=request.POST.get('grid') or [],
             solution=request.POST.get('solution') or {},
+            choices=request.POST.get('choices') or [],
             created_at=timezone.now(),
             updated_at=timezone.now(),
             created_by=0,
@@ -47,6 +49,7 @@ def item_update(request, pk):
         item.column = int(request.POST.get('column') or 0)
         item.grid = request.POST.get('grid') or []
         item.solution = request.POST.get('solution') or {}
+        item.choices = request.POST.get('choices') or []
         item.updated_at = timezone.now()
         item.updated_by = 0
         item.save()

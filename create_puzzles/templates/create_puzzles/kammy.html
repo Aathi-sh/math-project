@@ -1,11 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% extends 'layouts/base.html' %}
+{% block title %} create form {% endblock title %}
+{% block bodyclass %} hold-transition sidebar-mini {% endblock bodyclass %}
     <title> {% if is_update%}Update item {% else%} Create item {%endif%}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% block extrastyle %}
     <style>
         body {
             background-color: #f8f9fa;
@@ -13,16 +12,8 @@
             padding: 20px;
         }
         .container {
-            width:100%;
-            padding:0;
-            margin:0;
-            
-            
-        }
-        .custom-container{
-            max-width:960px;
-            length:100%;
-            padding:20px;
+            max-width: 1200px;
+            margin: 0 auto;
         }
         .header {
             text-align: center;
@@ -135,8 +126,13 @@
             transition: all 0.2s;
         }
         .input-option:hover {
-            transform: scale(1.1);
+            transform: scale(1.05);
             border-color: #0d6efd;
+        }
+        .input-option.selected {
+            border: 3px solid #0d6efd;
+            box-shadow: 0 0 10px rgba(13, 110, 253, 0.5);
+            transform: scale(1.05);
         }
         .input-option.number {
             background-color: #e7f1ff;
@@ -160,6 +156,29 @@
             display: flex;
             margin-bottom: 5px;
             justify-content: center;
+        }
+        .choices-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .choice-item {
+            display: flex;
+            align-items: center;
+            background-color: #e9ecef;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+        .choice-remove {
+            margin-left: 8px;
+            cursor: pointer;
+            color: #dc3545;
+        }
+        .choice-input-group {
+            display: flex;
+            margin-bottom: 10px;
         }
         @media (max-width: 768px) {
             .grid-cell {
@@ -191,34 +210,55 @@
         .gap-2{
             gap:10px;
         }
-
+        .submit-btn{
+            background-color:green;
+            color:white;
+            padding:10px 30px;
+            border-radius:5px;
+            border:none;
+            cursor:pointer;
+            width:200px;
+            margin-left:10px;
+        }
+        .cancel-btn{
+            background-color:blue;
+            color:white;
+            padding:10px 30px;
+            border-radius:5px;
+            text-decoration:none;
+            display:inline-block;
+            width:200px;
+            text-align:center;
+        }
+        .cancel-btn:hover{
+            background-color:#777;
+        }
     </style>
-</head>
-<body>
-    
+    {% endblock extrastyle %}
+    {% block content%}
+    <div class="content-wrapper ">
+      <!--
     <div class="card">
         <div class="header" style="width:100%;">
             <h1>Math Equation Grid Generator</h1>
-            <h1>{% if is_update %}Update Item{% else %}Create New Item{% endif %}</h1>  
+             
             <p class="lead">Create custom math equation grids and export them as JSON</p>
         </div>
+    -->
          <div class="card">
-            <div class="card-header">Project Information</div>
+            <div class="card-header">(Project Information) enga enna sonninga nu marante na</div>
+         
             <div class="card-body">
                 <form method="post">
                 {% csrf_token %}
                 <div class="row metadata-row">
                     <div class="col-md-4">
-                        <label for="name" class="form-label"> Name</label>
-                        <input type="text" class="form-control" id="name" name="name" placeholder="Enter project name" value="{{ item.name|default:'' }}" required>
+                        <label for="name" class="form-label"> Title </label>
+                        <input type="text" class="form-control" id="name" name="name" placeholder="Enter Title" value="{{ item.name|default:'' }}" required>
                     </div>
                     <div class="col-md-4">
-                        <label for="projectTitle" class="form-label" for="title">Title</label>
-                        <input type="text" class="form-control" id="title" name="title" placeholder="Enter title" value="{{ item.title|default:'' }}" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label for="projectAuthor" class="form-label" for ="author">Author</label>
-                        <input type="text" class="form-control" id="author" name="author" placeholder="Enter author name" value="{{ item.author|default:'' }}" required>
+                        <label for="projectTitle" class="form-label" for="title"> Description </label>
+                        <input type="text" class="form-control" id="title" name="title" placeholder="Add a Description" value="{{ item.title|default:'' }}" required>
                     </div>
                     
                     
@@ -227,15 +267,9 @@
                 <div class="row metadata-row">
                     <input type="hidden" id="gridInput" name="grid" value=''>
                     <input type="hidden" id="solutionInput" name="solution" value=''>
-                <div class="col-md-4">
-                        <label for="created_by" class="form-label">Created by</label>
-                        <input type="text" class="form-control" id="created_by" name="created_by"  value="{% if item.created_by%} {{item.created_by.username}}{% else %}SuperUser {%endif %}" readonly>
-                    </div>
-                    <div class="col-md-4">
-                        <label for="updated_by" class="form-label">Updated by</label>
-                        <input  class="form-control" id="updated_by" name="updated_by"  value="{% if item.updated_by %} {{ item.created_by.username}}{% else %}SuperUser{% endif%}" readonly>
-                    </div>
-                </div>
+                    <!-- ADDED: hidden input for choices so Django receives it -->
+                    <input type="hidden" id="choicesInput" name="choices" value=''>
+                   
              
                     
 
@@ -244,7 +278,7 @@
         </div>
         
 
-        <div class="card">
+       <div class="card">
             <div class="card-header">Grid Configuration</div>
             <div class="card-body">
                 <div class="row mb-3">
@@ -257,7 +291,7 @@
                         <input type="number" class="form-control" id="colsInput" name="column"  min="1" max="15" placeholder="Enter a Number" value="{{item.column|default:""}}" required>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label"for="difficulty">Difficulty</label>
+                        <label class="form-label"for="difficulty"> Level </label>
                         <div style="display:flex; gap:8px; align-items:stretch ;flex-wrap:nowrap;">
                         <select class="form-control" id="difficulty" name="difficulty" class="form-select form-select-sm" style="width:350px; min-width:0; length:200px;" required>
                         <option value="" disabled{% if not is_update %}selected{% endif %}>Select a difficulty </option>
@@ -265,10 +299,9 @@
                         <option value="Medium"{% if item.difficulty == "Medium" %}selected{% endif %}>Medium</option>
                         <option value="Hard"{% if item.difficulty == "Hard" %}selected{% endif %}>Hard</option>
                         </select>
-                        
                     
-                   
-                        <label class="form-label">&nbsp;</label>
+                    
+                    <label class="form-label">&nbsp;</label>
                         <button type="button" id="generateGrid"  class="btn btn-primary"style="width:330px;">Generate Grid</button>
                         </div>
                     </div>
@@ -285,11 +318,24 @@
             </div>
         </div>
 
+        <div class="card">
+            <div class="card-header">Answer Choices</div>
+            <div class="card-body">
+                <div class="choice-input-group">
+                    <input type="number" class="form-control" id="newChoiceInput" placeholder="Enter a number" >
+                    <button type="button" class="btn btn-primary ms-2" id="addChoiceBtn">Add Choice</button>
+                </div>
+                <div id="choicesContainer" class="choices-container">
+                    <!-- Choices will be added here -->
+                </div>
+            </div>
+        </div>
+
         <div class="controls">
             <button type="button" id="setSolution" class="btn btn-success btn-action"><i class="fas fa-check-circle"></i> Set Solution</button>
             <button type="button" id="validateGrid" class="btn btn-info btn-action"><i class="fas fa-check"></i> Validate Equations</button>
             <button type="button" id="exportJson" class="btn btn-dark btn-action"><i class="fas fa-file-export"></i> Export JSON</button>
-            <button  type="button" id="resetGrid" class="btn btn-warning btn-action"><i class="fas fa-redo"></i> Reset Grid</button>
+            <button type="button" id="resetGrid" class="btn btn-warning btn-action"><i class="fas fa-redo"></i> Reset Grid</button>
         </div>
 
         <div class="card">
@@ -369,12 +415,14 @@
             </div>
         </div>
     </div>
+     {% block extra_scripts %}
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Global variables
         let gridData = [];
         let solutionData = {};
+        let choices = [];
         let selectedCell = null;
         let cellEditorModal = null;
         let solutionModal = null;
@@ -386,11 +434,12 @@
             solutionModal = new bootstrap.Modal(document.getElementById('solutionModal'));
             
             // Generate initial grid
-             gridData = {{item.grid|safe|default:'[]'}};
-             solutionData = {{item.solution|safe|default:'{}'}};
-
-
+            gridData = {{item.grid|safe|default:'[]'}};
+            solutionData = {{item.solution|safe|default:'{}'}};
+            choices = {{item.choices|safe|default:'[]'}}; // ADDED: preload saved choices if editing
+            
              renderGrid();          
+             renderChoices();  // ADDED: render any existing choices
              updateJsonOutput();
             
             // Set up event listeners
@@ -400,10 +449,13 @@
         // Set up event listeners
         function setupEventListeners() {
             document.getElementById('generateGrid').addEventListener('click', generateGrid);
-            document.getElementById('setSolution').addEventListener('click', setSolution);
+            // wrap setSolution so it prevents default submit
+            document.getElementById('setSolution').addEventListener('click', function(e){ e.preventDefault(); setSolution(); });
             document.getElementById('validateGrid').addEventListener('click', validateGrid);
             document.getElementById('exportJson').addEventListener('click', exportJson);
             document.getElementById('resetGrid').addEventListener('click', resetGrid);
+            // wrap addChoice to prevent default submit
+            document.getElementById('addChoiceBtn').addEventListener('click', function(e){ e.preventDefault(); addChoice(); });
             
             // Input option event listeners
             document.querySelectorAll('.input-option').forEach(option => {
@@ -418,6 +470,14 @@
             
             // Save solution
             document.getElementById('saveSolution').addEventListener('click', saveSolution);
+            
+            // Allow pressing Enter to add choices (prevent default)
+            document.getElementById('newChoiceInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addChoice();
+                }
+            });
         }
 
         // Generate grid based on user input
@@ -514,6 +574,19 @@
             
             // Clear previous selection in modal
             document.querySelectorAll('.input-option').forEach(opt => opt.classList.remove('selected'));
+            
+            // Pre-select the current value if it exists
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+            const currentValue = gridData[row][col];
+            
+            if (currentValue && currentValue !== '_' && currentValue !== null) {
+                document.querySelectorAll('.input-option').forEach(opt => {
+                    if (opt.getAttribute('data-value') == currentValue) {
+                        opt.classList.add('selected');
+                    }
+                });
+            }
             
             cellEditorModal.show();
         }
@@ -612,6 +685,65 @@
             solutionModal.hide();
         }
 
+        // Add a new choice
+        function addChoice() {
+            const input = document.getElementById('newChoiceInput');
+            const value = parseInt(input.value);
+            
+            if (isNaN(value)) {
+                alert('Please enter a valid number.');
+                return;
+            }
+            
+            choices.push(value);
+            renderChoices();
+            
+            // Clear input
+            input.value = '';
+            input.focus();
+            
+            // Update JSON output
+            updateJsonOutput();
+        }
+
+        // Remove a choice
+        function removeChoice(index) {
+            choices.splice(index, 1);
+            renderChoices();
+            
+            // Update JSON output
+            updateJsonOutput();
+            //hide solutionModal
+            solutionModal.hide();
+        }
+
+        // Render choices
+        function renderChoices() {
+            const container = document.getElementById('choicesContainer');
+            container.innerHTML = '';
+            
+            if (choices.length === 0) {
+                container.innerHTML = '<p class="text-muted">No choices added yet.</p>';
+                return;
+            }
+            
+            choices.forEach((choice, index) => {
+                const choiceElement = document.createElement('div');
+                choiceElement.className = 'choice-item';
+                choiceElement.innerHTML = `
+                    ${choice}
+                    <span class="choice-remove" data-index="${index}">
+                        <i class="fas fa-times"></i>
+                    </span>
+                `;
+                
+                const removeBtn = choiceElement.querySelector('.choice-remove');
+                removeBtn.addEventListener('click', () => removeChoice(index));
+                
+                container.appendChild(choiceElement);
+            });
+        }
+
         // Validate equations in the grid
         function validateGrid() {
             // This would validate that equations are properly formed
@@ -623,7 +755,8 @@
         function exportJson() {
             const gridDataForExport = {
                 grid: gridData,
-                solution: solutionData
+                solution: solutionData,
+                choices: choices
             };
             
             const dataStr = JSON.stringify(gridDataForExport, null, 2);
@@ -641,283 +774,33 @@
         function updateJsonOutput() {
             const gridDataForExport = {
                 grid: gridData,
-                solution: solutionData
+                solution: solutionData,
+                choices: choices
             };
             
             document.getElementById('jsonOutput').textContent = 
                 JSON.stringify(gridDataForExport, null, 2);
 
-                document.getElementById('gridInput').value=JSON.stringify(gridData);
+                 document.getElementById('gridInput').value=JSON.stringify(gridData);
                 document.getElementById('solutionInput').value=JSON.stringify(solutionData);
+                document.getElementById('choicesInput').value=JSON.stringify(choices); // ADDED
         }
 
         // Reset grid
         function resetGrid() {
             if (confirm('Are you sure you want to reset the grid? All changes will be lost.')) {
                 generateGrid();
+                choices = [];
+                renderChoices();
             }
         }
-    </script>
-    <style>
-        .submit-btn{
-            background-color:green;
-            color:white;
-            padding:10px 30px;
-            border-radius:5px;
-            border:none;
-            cursor:pointer;
-            width:200px;
-        }
-        .cancel-btn{
-            background-color:blue;
-            color:white;
-            padding:10px 30px;
-            border-radius:5px;
-            text-decoration:none;
-            display:inline-block;
-            width:200px;
-            text-align:center;
-        }
-        .cancel-btn:hover{
-            background-color:#777;
-        }
-
-
-
-
-    </style>
-
-    <button type="submit" class="submit-btn">
-        {%if is_update%}Update {% else%}Create {%endif%}
-    </button>
-    <a href="{% url 'create_puzzles:item-list'%}" class="cancel-btn"> Cancel</a>
+    </script>   
+    {% endblock extra_scripts  %}
+     <button type="submit" class="submit-btn" style="margin-left:260px;">
+         {%if is_update%}Update {% else%}Create {%endif%}
+       </button>
+       
+ 
 </form>
-</body>
-</html>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-{% extends 'layouts/base.html' %}
-{% load static %}
-{% block title %} Kanban Board {% endblock title %}
-{% block extrastyle %}
-<!-- Ekko Lightbox -->
-<link rel="stylesheet" href="{% static 'plugins/ekko-lightbox/ekko-lightbox.css' %}">
-{% endblock extrastyle %}
-{% block bodyclass %} hold-transition sidebar-mini {% endblock bodyclass %}
-{% block content %}
-  <!-- Content Wrapper. Contains page content -->
-  <div class="content-wrapper kanban">
-    <section class="content-header">
-      <div class="container-fluid">
-        <div class="row">
-          <div class="col-sm-6">
-            <h1>Kanban Board</h1>
-          </div>
-          <div class="col-sm-6 d-none d-sm-block">
-            <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="#">Home</a></li>
-              <li class="breadcrumb-item active">Kanban Board</li>
-            </ol>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="content pb-3">
-      <div class="container-fluid h-100">
-        <div class="card card-row card-secondary">
-          <div class="card-header">
-            <h3 class="card-title">
-              Backlog
-            </h3>
-          </div>
-          <div class="card-body">
-            <div class="card card-info card-outline">
-              <div class="card-header">
-                <h5 class="card-title">Create Labels</h5>
-                <div class="card-tools">
-                  <a href="#" class="btn btn-tool btn-link">#3</a>
-                  <a href="#" class="btn btn-tool">
-                    <i class="fas fa-pen"></i>
-                  </a>
-                </div>
-              </div>
-              <div class="card-body">
-                <div class="custom-control custom-checkbox">
-                  <input class="custom-control-input" type="checkbox" id="customCheckbox1" disabled>
-                  <label for="customCheckbox1" class="custom-control-label">Bug</label>
-                </div>
-                <div class="custom-control custom-checkbox">
-                  <input class="custom-control-input" type="checkbox" id="customCheckbox2" disabled>
-                  <label for="customCheckbox2" class="custom-control-label">Feature</label>
-                </div>
-                <div class="custom-control custom-checkbox">
-                  <input class="custom-control-input" type="checkbox" id="customCheckbox3" disabled>
-                  <label for="customCheckbox3" class="custom-control-label">Enhancement</label>
-                </div>
-                <div class="custom-control custom-checkbox">
-                  <input class="custom-control-input" type="checkbox" id="customCheckbox4" disabled>
-                  <label for="customCheckbox4" class="custom-control-label">Documentation</label>
-                </div>
-                <div class="custom-control custom-checkbox">
-                  <input class="custom-control-input" type="checkbox" id="customCheckbox5" disabled>
-                  <label for="customCheckbox5" class="custom-control-label">Examples</label>
-                </div>
-              </div>
-            </div>
-            <div class="card card-primary card-outline">
-              <div class="card-header">
-                <h5 class="card-title">Create Issue template</h5>
-                <div class="card-tools">
-                  <a href="#" class="btn btn-tool btn-link">#4</a>
-                  <a href="#" class="btn btn-tool">
-                    <i class="fas fa-pen"></i>
-                  </a>
-                </div>
-              </div>
-              <div class="card-body">
-                <div class="custom-control custom-checkbox">
-                  <input class="custom-control-input" type="checkbox" id="customCheckbox1_1" disabled>
-                  <label for="customCheckbox1_1" class="custom-control-label">Bug Report</label>
-                </div>
-                <div class="custom-control custom-checkbox">
-                  <input class="custom-control-input" type="checkbox" id="customCheckbox1_2" disabled>
-                  <label for="customCheckbox1_2" class="custom-control-label">Feature Request</label>
-                </div>
-              </div>
-            </div>
-            <div class="card card-primary card-outline">
-              <div class="card-header">
-                <h5 class="card-title">Create PR template</h5>
-                <div class="card-tools">
-                  <a href="#" class="btn btn-tool btn-link">#6</a>
-                  <a href="#" class="btn btn-tool">
-                    <i class="fas fa-pen"></i>
-                  </a>
-                </div>
-              </div>
-            </div>
-            <div class="card card-light card-outline">
-              <div class="card-header">
-                <h5 class="card-title">Create Actions</h5>
-                <div class="card-tools">
-                  <a href="#" class="btn btn-tool btn-link">#7</a>
-                  <a href="#" class="btn btn-tool">
-                    <i class="fas fa-pen"></i>
-                  </a>
-                </div>
-
-              </div>
-              <div class="card-body">
-                <p>
-                  Lorem ipsum dolor sit amet, consectetuer adipiscing elit.
-                  Aenean commodo ligula eget dolor. Aenean massa.
-                  Cum sociis natoque penatibus et magnis dis parturient montes,
-                  nascetur ridiculus mus.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="card card-row card-primary">
-          <div class="card-header">
-            <h3 class="card-title">
-              To Do
-            </h3>
-          </div>
-          <div class="card-body">
-            <div class="card card-primary card-outline">
-              <div class="card-header">
-                <h5 class="card-title">Create first milestone</h5>
-                <div class="card-tools">
-                  <a href="#" class="btn btn-tool btn-link">#5</a>
-                  <a href="#" class="btn btn-tool">
-                    <i class="fas fa-pen"></i>
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="card card-row card-default">
-          <div class="card-header bg-info">
-            <h3 class="card-title">
-              In Progress
-            </h3>
-          </div>
-          <div class="card-body">
-            <div class="card card-light card-outline">
-              <div class="card-header">
-                <h5 class="card-title">Update Readme</h5>
-                <div class="card-tools">
-                  <a href="#" class="btn btn-tool btn-link">#2</a>
-                  <a href="#" class="btn btn-tool">
-                    <i class="fas fa-pen"></i>
-                  </a>
-                </div>
-              </div>
-              <div class="card-body">
-                <p>
-                  Lorem ipsum dolor sit amet, consectetuer adipiscing elit.
-                  Aenean commodo ligula eget dolor. Aenean massa.
-                  Cum sociis natoque penatibus et magnis dis parturient montes,
-                  nascetur ridiculus mus.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="card card-row card-success">
-          <div class="card-header">
-            <h3 class="card-title">
-              Done
-            </h3>
-          </div>
-          <div class="card-body">
-            <div class="card card-primary card-outline">
-              <div class="card-header">
-                <h5 class="card-title">Create repo</h5>
-                <div class="card-tools">
-                  <a href="#" class="btn btn-tool btn-link">#1</a>
-                  <a href="#" class="btn btn-tool">
-                    <i class="fas fa-pen"></i>
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  </div>
-{% endblock content %}
-{% block extra_scripts %}
-<!-- Ekko Lightbox -->
-<script src="{% static 'plugins/ekko-lightbox/ekko-lightbox.min.js' %}"></script>
-<!-- overlayScrollbars -->
-<script src="{% static 'plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js' %}"></script>
-<!-- Filterizr-->
-<script src="{% static 'plugins/filterizr/jquery.filterizr.min.js' %}"></script>
-<!-- Page specific script -->
-<script>
-  $(function () {
-
-  })
-</script>
-{% endblock extra_scripts %}
+ {% endblock content %}

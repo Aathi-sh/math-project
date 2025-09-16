@@ -64,6 +64,7 @@
                     <th>Difficulty</th>
                     <th>Grid</th>
                     <th>Solution</th>
+                    <th>Choices</th>
                     <th>Created At</th>
                     <th>Updated At</th>
                     <th>Created By</th>
@@ -83,6 +84,7 @@
                     <td>{{ item.difficulty }}</td>
                     <td class="truncate" title="{{ item.grid|escape }}">{{ item.grid| truncatechars:50}}</td>
                     <td class="truncate" title ="{{ item.solution|escape }}">{{item.solution| truncatechars:50}}</td>
+                    <td class="truncate" title ="{{ item.choices|escape }}">{{item.choices| truncatechars:50}}</td>
                     <td>{{ item.created_at|date:"Y-m-d H:i" }}</td>
                     <td>{{ item.updated_at|date:"Y-m-d H:i" }}</td>
                     <td>{{ item.created_by }}</td>
@@ -94,7 +96,7 @@
                   </tr>
                   {% empty %}
                   <tr>
-                    <td colspan="14" class="text-center">No items found</td>
+                    <td colspan="15" class="text-center">No items found</td>
                   </tr>
                   {% endfor %}
                 </tbody>
@@ -109,6 +111,7 @@
                     <th>Difficulty</th>
                     <th>Grid</th>
                     <th>Solution</th>
+                    <th>Choices</th>
                     <th>Created At</th>
                     <th>Updated At</th>
                     <th>Created By</th>
@@ -138,6 +141,7 @@
                     <th>Difficulty</th>
                     <th>Grid</th>
                     <th>Solution</th>
+                    <th>Choices</th>
                     <th>Created At</th>
                     <th>Updated At</th>
                     <th>Created By</th>
@@ -156,6 +160,7 @@
                     <td>{{ item.column }}</td>
                     <td class="truncate" title="{{ item.grid|escape }}">{{ item.grid| truncatechars:50}}</td>
                     <td class="truncate" title ="{{ item.solution|escape }}">{{item.solution| truncatechars:50}}</td>
+                    <td class="truncate" title ="{{ item.solution|escape }}">{{item.solution| truncatechars:50}}</td>
                     <td>{{ item.solution|safe }}</td>
                     <td>{{ item.created_at|date:"Y-m-d H:i" }}</td>
                     <td>{{ item.updated_at|date:"Y-m-d H:i" }}</td>
@@ -168,7 +173,7 @@
                   </tr>
                   {% empty %}
                   <tr>
-                    <td colspan="14" class="text-center">No items found</td>
+                    <td colspan="15" class="text-center">No items found</td>
                   </tr>
                   {% endfor %}
                 </tbody>
@@ -183,6 +188,7 @@
                     <th>Difficulty</th>
                     <th>Grid</th>
                     <th>Solution</th>
+                    <th>Choices</th>
                     <th>Created At</th>
                     <th>Updated At</th>
                     <th>Created By</th>

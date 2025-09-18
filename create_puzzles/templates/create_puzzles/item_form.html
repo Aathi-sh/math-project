@@ -246,7 +246,7 @@
         </div>
     -->
          <div class="card">
-            <div class="card-header">(Project Information) enga enna sonninga nu marante na</div>
+            <div class="card-header"> Basic Details </div>
          
             <div class="card-body">
                 <form method="post">
@@ -476,7 +476,9 @@
             // Allow pressing Enter to add choices
             document.getElementById('newChoiceInput').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
+                    e.preventDefault();
                     addChoice();
+                    return false;
                 }
             });
         }
@@ -801,7 +803,8 @@
          {%if is_update%}Update {% else%}Create {%endif%}
        </button>
        
- 
+      <a href="templates/dashboard" class="cancel-btn"> Cancel</a>
+                    
 </form>
 
  {% endblock content %}

@@ -133,6 +133,7 @@
             border: 3px solid #0d6efd;
             box-shadow: 0 0 10px rgba(13, 110, 253, 0.5);
             transform: scale(1.05);
+            background-color: #e7f5ff;
         }
         .input-option.number {
             background-color: #e7f1ff;
@@ -142,6 +143,12 @@
         }
         .input-option.special {
             background-color: #fff3cd;
+        }
+        .custom-number-input {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
         }
         .json-output {
             background-color: #2b3035;
@@ -180,6 +187,13 @@
             display: flex;
             margin-bottom: 10px;
         }
+        .selected-values-display {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #fff3cd;
+            border-radius: 5px;
+            border-left: 4px solid #ffc107;
+        }
         @media (max-width: 768px) {
             .grid-cell {
                 width: 50px;
@@ -198,14 +212,11 @@
             background:#0d6efd;
             border:none;
             border-radius:6px;
-
             color:white;
-
         }
         .d-flex{
             display:flex;
             align-items:center;
-            
         }
         .gap-2{
             gap:10px;
@@ -237,15 +248,7 @@
     {% endblock extrastyle %}
     {% block content%}
     <div class="content-wrapper ">
-      <!--
-    <div class="card">
-        <div class="header" style="width:100%;">
-            <h1>Math Equation Grid Generator</h1>
-             
-            <p class="lead">Create custom math equation grids and export them as JSON</p>
-        </div>
-    -->
-         <div class="card">
+      <div class="card">
             <div class="card-header"> Basic Details </div>
          
             <div class="card-body">
@@ -260,23 +263,14 @@
                         <label for="projectTitle" class="form-label" for="title"> Description </label>
                         <input type="text" class="form-control" id="title" name="title" placeholder="Add a Description" value="{{ item.title|default:'' }}" required>
                     </div>
-                    
-                    
-                    
                 </div>
                 <div class="row metadata-row">
                     <input type="hidden" id="gridInput" name="grid" value=''>
                     <input type="hidden" id="solutionInput" name="solution" value=''>
-                    <!-- ADDED: hidden input for choices so Django receives it -->
                     <input type="hidden" id="choicesInput" name="choices" value=''>
-                   
-             
-                    
-
                 </div>
             </div>
         </div>
-        
 
        <div class="card">
             <div class="card-header">Grid Configuration</div>
@@ -299,7 +293,6 @@
                         <option value="Medium"{% if item.difficulty == "Medium" %}selected{% endif %}>Medium</option>
                         <option value="Hard"{% if item.difficulty == "Hard" %}selected{% endif %}>Hard</option>
                         </select>
-                    
                     
                     <label class="form-label">&nbsp;</label>
                         <button type="button" id="generateGrid"  class="btn btn-primary"style="width:330px;">Generate Grid</button>
@@ -355,7 +348,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <h6>Numbers</h6>
+                    <h6>Numbers (Multiple Selection)</h6>
                     <div class="mb-3">
                         <div class="input-option number" data-value="0">0</div>
                         <div class="input-option number" data-value="1">1</div>
@@ -368,7 +361,18 @@
                         <div class="input-option number" data-value="8">8</div>
                         <div class="input-option number" data-value="9">9</div>
                     </div>
-                    
+                     <div class="custom-number-input">
+                        <label class="form-label">Add Custom Number</label>
+                        <div class="input-group mb-2">
+                            <input type="number" class="form-control" id="customNumberInput" placeholder="Enter a number">
+                            <button class="btn btn-outline-primary" type="button" id="addCustomNumber">
+                                <i class="fas fa-plus"></i> Add
+                            </button>
+                        </div>
+                    </div>
+                    <div class="selected-values-display">
+                        <strong>Selected Values:</strong> <span id="selectedValuesDisplay">None</span>
+                    </div>
                     <h6>Operators</h6>
                     <div class="mb-3">
                         <div class="input-option operator" data-value="+">+</div>
@@ -426,6 +430,7 @@
         let selectedCell = null;
         let cellEditorModal = null;
         let solutionModal = null;
+        let selectedValues = []; // For multi-selection
 
         // Initialize the page
         document.addEventListener('DOMContentLoaded', function() {
@@ -438,9 +443,9 @@
             solutionData = {{item.solution|safe|default:'{}'}};
             choices = {{item.choices|safe|default:'[]'}}; // ADDED: preload saved choices if editing
             
-             renderGrid();
-             renderChoices();  // ADDED: render any existing choices
-             updateJsonOutput();
+            renderGrid();
+            renderChoices();  // ADDED: render any existing choices
+            updateJsonOutput();
             
             // Set up event listeners
             setupEventListeners();
@@ -457,13 +462,45 @@
                 event.preventDefault();
                 addChoice();
                 return false;
-            })
+            });
             
-            // Input option event listeners
-            document.querySelectorAll('.input-option').forEach(option => {
+            // Input option event listeners for multi-selection
+            document.querySelectorAll('.input-option.number').forEach(option => {
                 option.addEventListener('click', function() {
-                    document.querySelectorAll('.input-option').forEach(opt => opt.classList.remove('selected'));
+                    const value = this.getAttribute('data-value');
+                    
+                    if (this.classList.contains('selected')) {
+                        this.classList.remove('selected');
+                        selectedValues = selectedValues.filter(v => v !== value);
+                    } else {
+                        this.classList.add('selected');
+                        selectedValues.push(value);
+                    }
+                    
+                    updateSelectedValuesDisplay();
+                });
+            });
+            
+            // Single selection for operators and special values
+            document.querySelectorAll('.input-option.operator, .input-option.special').forEach(option => {
+                option.addEventListener('click', function() {
+                    // Clear all non-number selections
+                    document.querySelectorAll('.input-option.operator, .input-option.special').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    
+                    // Clear number selections
+                    document.querySelectorAll('.input-option.number').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    
+                    // Select current option
                     this.classList.add('selected');
+                    
+                    const value = this.getAttribute('data-value');
+                    selectedValues = [value];
+                    
+                    updateSelectedValuesDisplay();
                 });
             });
             
@@ -473,6 +510,23 @@
             // Save solution
             document.getElementById('saveSolution').addEventListener('click', saveSolution);
             
+            // Add custom number
+            document.getElementById('addCustomNumber').addEventListener('click', function() {
+                const customInput = document.getElementById('customNumberInput');
+                const value = customInput.value.trim();
+                
+                if (value) {
+                    // Check if this value is already selected
+                    if (!selectedValues.includes(value)) {
+                        selectedValues.push(value);
+                        updateSelectedValuesDisplay();
+                        
+                        // Clear the input
+                        customInput.value = '';
+                    }
+                }
+            });
+            
             // Allow pressing Enter to add choices
             document.getElementById('newChoiceInput').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
@@ -481,6 +535,16 @@
                     return false;
                 }
             });
+        }
+
+        // Update the selected values display
+        function updateSelectedValuesDisplay() {
+            const displayElement = document.getElementById('selectedValuesDisplay');
+            if (selectedValues.length > 0) {
+                displayElement.textContent = selectedValues.join('');
+            } else {
+                displayElement.textContent = 'None';
+            }
         }
 
         // Generate grid based on user input
@@ -583,14 +647,25 @@
             const col = parseInt(cell.dataset.col);
             const currentValue = gridData[row][col];
             
+            // Reset selected values
+            selectedValues = [];
+            
             if (currentValue && currentValue !== '_' && currentValue !== null) {
-                document.querySelectorAll('.input-option').forEach(opt => {
-                    if (opt.getAttribute('data-value') == currentValue) {
-                        opt.classList.add('selected');
-                    }
+                // Handle multiple values (comma separated)
+                const values = currentValue.split(',');
+                
+                values.forEach(value => {
+                    const trimmedValue = value.trim();
+                    document.querySelectorAll('.input-option').forEach(opt => {
+                        if (opt.getAttribute('data-value') === trimmedValue) {
+                            opt.classList.add('selected');
+                            selectedValues.push(trimmedValue);
+                        }
+                    });
                 });
             }
             
+            updateSelectedValuesDisplay();
             cellEditorModal.show();
         }
 
@@ -598,15 +673,22 @@
         function applyCellValue() {
             if (!selectedCell) return;
             
-            const selectedOption = document.querySelector('.input-option.selected');
-            if (!selectedOption) return;
-            
-            const value = selectedOption.getAttribute('data-value');
             const row = parseInt(selectedCell.dataset.row);
             const col = parseInt(selectedCell.dataset.col);
             
-            if (value === 'clear') {
-                // Clear cell
+            // Use selected values or default to blank
+            if (selectedValues.length > 0) {
+                // Check if we have only numbers selected (merge them)
+                const hasOnlyNumbers = selectedValues.every(val => !isNaN(val));
+                
+                if (hasOnlyNumbers) {
+                    // Merge numbers into a single value (e.g., 1 and 2 become 12)
+                    gridData[row][col] = selectedValues.join('');
+                } else {
+                    // For operators and special values, use the first selected value
+                    gridData[row][col] = selectedValues[0];
+                }
+            } else {
                 gridData[row][col] = '_';
                 
                 // Remove from solution if it was there
@@ -614,12 +696,6 @@
                 if (solutionData[cellKey] !== undefined) {
                     delete solutionData[cellKey];
                 }
-            } else if (value === 'null') {
-                // Set as hidden cell
-                gridData[row][col] = null;
-            } else {
-                // Set cell value
-                gridData[row][col] = value;
             }
             
             // Re-render grid
@@ -716,8 +792,6 @@
             
             // Update JSON output
             updateJsonOutput();
-            //hide solutionModal
-            solutionModal.hide();
         }
 
         // Render choices
@@ -784,9 +858,9 @@
             document.getElementById('jsonOutput').textContent = 
                 JSON.stringify(gridDataForExport, null, 2);
 
-                 document.getElementById('gridInput').value=JSON.stringify(gridData);
-                document.getElementById('solutionInput').value=JSON.stringify(solutionData);
-                document.getElementById('choicesInput').value=JSON.stringify(choices); // ADDED
+            document.getElementById('gridInput').value = JSON.stringify(gridData);
+            document.getElementById('solutionInput').value = JSON.stringify(solutionData);
+            document.getElementById('choicesInput').value = JSON.stringify(choices);
         }
 
         // Reset grid
@@ -798,7 +872,450 @@
             }
         }
     </script>   
-    {% endblock extra_scripts  %}
+<!-- 
+<script>
+        // Global variables
+        let gridData = [];
+        let solutionData = {};
+        let choices = [];
+        let selectedCell = null;
+        let cellEditorModal = null;
+        let solutionModal = null;
+        let selectedValues = []; // For multi-selection
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize modals
+            cellEditorModal = new bootstrap.Modal(document.getElementById('cellEditorModal'));
+            solutionModal = new bootstrap.Modal(document.getElementById('solutionModal'));
+            
+            // Generate initial grid
+            gridData = {{item.grid|safe|default:'[]'}};
+            solutionData = {{item.solution|safe|default:'{}'}};
+            choices = {{item.choices|safe|default:'[]'}}; // ADDED: preload saved choices if editing
+            
+            renderGrid();
+            renderChoices();  // ADDED: render any existing choices
+            updateJsonOutput();
+            
+            // Set up event listeners
+            setupEventListeners();
+        });
+
+        // Set up event listeners
+        function setupEventListeners() {
+            document.getElementById('generateGrid').addEventListener('click', generateGrid);
+            document.getElementById('setSolutionBtn').addEventListener('click', setSolution);
+            document.getElementById('validateGrid').addEventListener('click', validateGrid);
+            document.getElementById('exportJson').addEventListener('click', exportJson);
+            document.getElementById('resetGrid').addEventListener('click', resetGrid);
+            document.getElementById('addChoiceBtn').addEventListener('click', function(event){
+                event.preventDefault();
+                addChoice();
+                return false;
+            });
+            
+            // Input option event listeners for multi-selection
+            document.querySelectorAll('.input-option.number').forEach(option => {
+                option.addEventListener('click', function() {
+                    const value = this.getAttribute('data-value');
+                    
+                    if (this.classList.contains('selected')) {
+                        this.classList.remove('selected');
+                        selectedValues = selectedValues.filter(v => v !== value);
+                    } else {
+                        this.classList.add('selected');
+                        selectedValues.push(value);
+                    }
+                    
+                    updateSelectedValuesDisplay();
+                });
+            });
+            
+            // Single selection for operators and special values
+            document.querySelectorAll('.input-option.operator, .input-option.special').forEach(option => {
+                option.addEventListener('click', function() {
+                    // Clear all non-number selections
+                    document.querySelectorAll('.input-option.operator, .input-option.special').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    
+                    // Clear number selections
+                    document.querySelectorAll('.input-option.number').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    
+                    // Select current option
+                    this.classList.add('selected');
+                    
+                    const value = this.getAttribute('data-value');
+                    selectedValues = [value];
+                    
+                    updateSelectedValuesDisplay();
+                });
+            });
+            
+            // Apply cell value
+            document.getElementById('applyCellValue').addEventListener('click', applyCellValue);
+            
+            // Save solution
+            document.getElementById('saveSolution').addEventListener('click', saveSolution);
+            
+            // Add custom number
+            document.getElementById('addCustomNumber').addEventListener('click', function() {
+                const customInput = document.getElementById('customNumberInput');
+                const value = customInput.value.trim();
+                
+                if (value) {
+                    // Check if this value is already selected
+                    if (!selectedValues.includes(value)) {
+                        selectedValues.push(value);
+                        updateSelectedValuesDisplay();
+                        
+                        // Clear the input
+                        customInput.value = '';
+                    }
+                }
+            });
+            
+            // Allow pressing Enter to add choices
+            document.getElementById('newChoiceInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addChoice();
+                    return false;
+                }
+            });
+        }
+
+        // Update the selected values display
+        function updateSelectedValuesDisplay() {
+            const displayElement = document.getElementById('selectedValuesDisplay');
+            if (selectedValues.length > 0) {
+                displayElement.textContent = selectedValues.join('');
+            } else {
+                displayElement.textContent = 'None';
+            }
+        }
+
+        // Generate grid based on user input
+        function generateGrid() {
+            const rows = parseInt(document.getElementById('rowsInput').value);
+            const cols = parseInt(document.getElementById('colsInput').value);
+            
+            // Initialize grid data
+            gridData = [];
+            for (let i = 0; i < rows; i++) {
+                const row = [];
+                for (let j = 0; j < cols; j++) {
+                    row.push('_'); // Start with all empty cells
+                }
+                gridData.push(row);
+            }
+            
+            // Reset solution
+            solutionData = {};
+            
+            // Render grid
+            renderGrid();
+            
+            // Update JSON output
+            updateJsonOutput();
+        }
+
+        // Render the grid
+        function renderGrid() {
+            const gridContainer = document.getElementById('gridContainer');
+            gridContainer.innerHTML = '';
+            
+            // Create grid rows
+            for (let row = 0; row < gridData.length; row++) {
+                const gridRow = document.createElement('div');
+                gridRow.className = 'grid-row';
+                
+                for (let col = 0; col < gridData[row].length; col++) {
+                    const cellValue = gridData[row][col];
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    
+                    if (cellValue === null) {
+                        cell.classList.add('hidden');
+                        cell.innerHTML = '<i class="fas fa-question"></i>';
+                    } else if (cellValue === '_') {
+                        cell.classList.add('empty');
+                        cell.textContent = '';
+                    } else if (['+', '-', '×', '÷'].includes(cellValue)) {
+                        cell.classList.add('operator');
+                        cell.textContent = cellValue;
+                    } else if (cellValue === '=') {
+                        cell.classList.add('equals');
+                        cell.textContent = cellValue;
+                    } else {
+                        // Check if this cell has a solution
+                        const cellKey = `${row},${col}`;
+                        if (solutionData[cellKey] !== undefined) {
+                            cell.classList.add('input');
+                        } else {
+                            cell.classList.add('fixed');
+                        }
+                        cell.textContent = cellValue;
+                    }
+                    
+                    // Add click event
+                    cell.addEventListener('click', handleCellClick);
+                    
+                    gridRow.appendChild(cell);
+                }
+                
+                gridContainer.appendChild(gridRow);
+            }
+        }
+
+        // Handle cell click
+        function handleCellClick(event) {
+            const cell = event.target;
+            selectedCell = cell;
+            
+            // Remove previous selection
+            document.querySelectorAll('.grid-cell.selected').forEach(cell => {
+                cell.classList.remove('selected');
+            });
+            
+            // Select current cell
+            cell.classList.add('selected');
+            
+            // Show cell editor modal
+            document.getElementById('currentCellPos').textContent = 
+                `Row: ${cell.dataset.row}, Col: ${cell.dataset.col}`;
+            
+            // Clear previous selection in modal
+            document.querySelectorAll('.input-option').forEach(opt => opt.classList.remove('selected'));
+            
+            // Pre-select the current value if it exists
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+            const currentValue = gridData[row][col];
+            
+            // Reset selected values
+            selectedValues = [];
+            
+            if (currentValue && currentValue !== '_' && currentValue !== null) {
+                // Handle multiple values (comma separated)
+                const values = currentValue.split('');
+                
+                values.forEach(value => {
+                    const trimmedValue = value.trim();
+                    document.querySelectorAll('.input-option').forEach(opt => {
+                        if (opt.getAttribute('data-value') === trimmedValue) {
+                            opt.classList.add('selected');
+                            selectedValues.push(trimmedValue);
+                        }
+                    });
+                });
+            }
+            
+            updateSelectedValuesDisplay();
+            cellEditorModal.show();
+        }
+
+        // Apply cell value from modal
+        function applyCellValue() {
+            if (!selectedCell) return;
+            
+            const row = parseInt(selectedCell.dataset.row);
+            const col = parseInt(selectedCell.dataset.col);
+            
+            // Use selected values or default to blank
+            if (selectedValues.length > 0) {
+                gridData[row][col] = selectedValues.join(',');
+            } else {
+                gridData[row][col] = '_';
+                
+                // Remove from solution if it was there
+                const cellKey = `${row},${col}`;
+                if (solutionData[cellKey] !== undefined) {
+                    delete solutionData[cellKey];
+                }
+            }
+            
+            // Re-render grid
+            renderGrid();
+            
+            // Update JSON output
+            updateJsonOutput();
+            
+            // Hide modal
+            cellEditorModal.hide();
+        }
+
+        // Set solution for selected cell
+        function setSolution() {
+            if (!selectedCell) {
+                alert('Please select a cell first.');
+                return;
+            }
+            
+            const row = parseInt(selectedCell.dataset.row);
+            const col = parseInt(selectedCell.dataset.col);
+            
+            // Check if cell is editable (empty or hidden)
+            if (gridData[row][col] !== '_' && gridData[row][col] !== null) {
+                alert('You can only set solutions for empty or hidden cells.');
+                return;
+            }
+            
+            // Show solution modal
+            document.getElementById('solutionCellPos').textContent = 
+                `Row: ${row}, Col: ${col}`;
+            document.getElementById('solutionValue').value = '';
+            
+            solutionModal.show();
+        }
+
+        // Save solution value
+        function saveSolution() {
+            if (!selectedCell) return;
+            
+            const row = parseInt(selectedCell.dataset.row);
+            const col = parseInt(selectedCell.dataset.col);
+            const value = document.getElementById('solutionValue').value;
+            
+            if (!value) {
+                alert('Please enter a solution value.');
+                return;
+            }
+            
+            // Save solution
+            const cellKey = `${row},${col}`;
+            solutionData[cellKey] = parseInt(value);
+            
+            // Mark cell as input cell
+            if (gridData[row][col] === '_') {
+                gridData[row][col] = '?';
+            }
+            
+            // Re-render grid
+            renderGrid();
+            
+            // Update JSON output
+            updateJsonOutput();
+            
+            // Hide modal
+            solutionModal.hide();
+        }
+
+        // Add a new choice
+        function addChoice() {
+            const input = document.getElementById('newChoiceInput');
+            const value = parseInt(input.value);
+            
+            if (isNaN(value)) {
+                alert('Please enter a valid number.');
+                return;
+            }
+            
+            choices.push(value);
+            renderChoices();
+            
+            // Clear input
+            input.value = '';
+            input.focus();
+            
+            // Update JSON output
+            updateJsonOutput();
+        }
+
+        // Remove a choice
+        function removeChoice(index) {
+            choices.splice(index, 1);
+            renderChoices();
+            
+            // Update JSON output
+            updateJsonOutput();
+        }
+
+        // Render choices
+        function renderChoices() {
+            const container = document.getElementById('choicesContainer');
+            container.innerHTML = '';
+            
+            if (choices.length === 0) {
+                container.innerHTML = '<p class="text-muted">No choices added yet.</p>';
+                return;
+            }
+            
+            choices.forEach((choice, index) => {
+                const choiceElement = document.createElement('div');
+                choiceElement.className = 'choice-item';
+                choiceElement.innerHTML = `
+                    ${choice}
+                    <span class="choice-remove" data-index="${index}">
+                        <i class="fas fa-times"></i>
+                    </span>
+                `;
+                
+                const removeBtn = choiceElement.querySelector('.choice-remove');
+                removeBtn.addEventListener('click', () => removeChoice(index));
+                
+                container.appendChild(choiceElement);
+            });
+        }
+
+        // Validate equations in the grid
+        function validateGrid() {
+            // This would validate that equations are properly formed
+            // For simplicity, we'll just show a message
+            alert('Grid validation would check if equations are properly formed. This feature would be implemented in a complete version.');
+        }
+
+        // Export grid as JSON
+        function exportJson() {
+            const gridDataForExport = {
+                grid: gridData,
+                solution: solutionData,
+                choices: choices
+            };
+            
+            const dataStr = JSON.stringify(gridDataForExport, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'math-grid.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+
+        // Update JSON output display
+        function updateJsonOutput() {
+            const gridDataForExport = {
+                grid: gridData,
+                solution: solutionData,
+                choices: choices
+            };
+            
+            document.getElementById('jsonOutput').textContent = 
+                JSON.stringify(gridDataForExport, null, 2);
+
+            document.getElementById('gridInput').value = JSON.stringify(gridData);
+            document.getElementById('solutionInput').value = JSON.stringify(solutionData);
+            document.getElementById('choicesInput').value = JSON.stringify(choices);
+        }
+
+        // Reset grid
+        function resetGrid() {
+            if (confirm('Are you sure you want to reset the grid? All changes will be lost.')) {
+                generateGrid();
+                choices = [];
+                renderChoices();
+            }
+        }
+    </script>   
+    -->
+   {% endblock extra_scripts  %}
      <button type="submit" class="submit-btn" style="margin-left:260px;">
          {%if is_update%}Update {% else%}Create {%endif%}
        </button>

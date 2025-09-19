@@ -10,10 +10,12 @@
             background-color: #f8f9fa;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             
+            
         }
         .container {
             max-width: 1200px;
             margin: 0 auto;
+            
         }
         .header {
             text-align: center;
@@ -248,7 +250,7 @@
     {% endblock extrastyle %}
     {% block content%}
     <div class="content-wrapper ">
-      <div class="card">
+      <div class="card" style="margin:20px;">
             <div class="card-header"> Basic Details </div>
          
             <div class="card-body">
@@ -272,7 +274,7 @@
             </div>
         </div>
 
-       <div class="card">
+       <div class="card" style="margin:20px;">
             <div class="card-header">Grid Configuration</div>
             <div class="card-body">
                 <div class="row mb-3">
@@ -302,7 +304,7 @@
             </div>
         </div>
 
-        <div class="card">
+        <div class="card" style="margin:20px;">
             <div class="card-header">Math Grid</div>
             <div class="card-body">
                 <div class="text-center">
@@ -311,7 +313,7 @@
             </div>
         </div>
 
-        <div class="card">
+        <div class="card" style="margin:20px;" >
             <div class="card-header">Answer Choices</div>
             <div class="card-body">
                 <div class="choice-input-group">
@@ -326,12 +328,12 @@
 
         <div class="controls">
             
-            <button  type ="button" id="validateGrid" class="btn btn-info btn-action"><i class="fas fa-check"></i> Validate Equations</button>
-            <button type ="button" id="exportJson" class="btn btn-dark btn-action"><i class="fas fa-file-export"></i> Export JSON</button>
-            <button type ="button"  id="resetGrid" class="btn btn-warning btn-action"><i class="fas fa-redo"></i> Reset Grid</button>
+            <button  type ="button" id="validateGrid" class="btn btn-info btn-action" style="margin:5px 5px 5px 20px ; height:50px;"><i class="fas fa-check"></i> Validate Equations</button>
+            <button type ="button" id="exportJson" class="btn btn-dark btn-action" style="height: 50px; margin: 5px 0px 5px 0px;"><i class="fas fa-file-export"></i> Export JSON</button>
+            <button type ="button"  id="resetGrid" class="btn btn-warning btn-action" style="margin:5px 20px 5px 5px ; height:50px;"><i class="fas fa-redo"></i> Reset Grid</button>
         </div>
 
-        <div class="card">
+        <div class="card" style="margin:20px;">
             <div class="card-header">JSON Output</div>
             <div class="card-body">
                 <pre id="jsonOutput" class="json-output">// Your grid JSON will appear here</pre>

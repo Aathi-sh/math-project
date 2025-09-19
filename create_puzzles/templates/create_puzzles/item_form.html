@@ -9,7 +9,7 @@
         body {
             background-color: #f8f9fa;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding: 20px;
+            
         }
         .container {
             max-width: 1200px;
@@ -332,7 +332,7 @@
         </div>
 
         <div class="controls">
-            <button type ="button" id="setSolutionBtn" class="btn btn-success btn-action"><i class="fas fa-check-circle"></i> Set Solution</button>
+            
             <button  type ="button" id="validateGrid" class="btn btn-info btn-action"><i class="fas fa-check"></i> Validate Equations</button>
             <button type ="button" id="exportJson" class="btn btn-dark btn-action"><i class="fas fa-file-export"></i> Export JSON</button>
             <button type ="button"  id="resetGrid" class="btn btn-warning btn-action"><i class="fas fa-redo"></i> Reset Grid</button>
@@ -384,6 +384,9 @@
                         <div class="input-option special" data-value="null">Hidden</div>
                         <div class="input-option special" data-value="clear">Clear</div>
                     </div>
+                    <div class="controls">
+                    <button type ="button" id="setSolutionBtn" class="btn btn-success btn-action"><i class="fas fa-check-circle"></i> Set Solution</button>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -410,7 +413,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="saveSolution">Save Solution</button>
+                    <button type="button" class="btn btn-primary" id="saveSolutionBtn">Save Solution</button>
                 </div>
             </div>
         </div>
@@ -437,6 +440,7 @@
             gridData = {{item.grid|safe|default:'[]'}};
             solutionData = {{item.solution|safe|default:'{}'}};
             choices = {{item.choices|safe|default:'[]'}}; // ADDED: preload saved choices if editing
+             
             
              renderGrid();
              renderChoices();  // ADDED: render any existing choices
@@ -453,6 +457,7 @@
             document.getElementById('validateGrid').addEventListener('click', validateGrid);
             document.getElementById('exportJson').addEventListener('click', exportJson);
             document.getElementById('resetGrid').addEventListener('click', resetGrid);
+
             document.getElementById('addChoiceBtn').addEventListener('click', function(event){
                 event.preventDefault();
                 addChoice();
@@ -471,7 +476,14 @@
             document.getElementById('applyCellValue').addEventListener('click', applyCellValue);
             
             // Save solution
-            document.getElementById('saveSolution').addEventListener('click', saveSolution);
+            document.getElementById('saveSolutionBtn').addEventListener('click', saveSolution);
+            document.getElementById('solutionValue').addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    saveSolution();
+                    
+                }
+            });
             
             // Allow pressing Enter to add choices
             document.getElementById('newChoiceInput').addEventListener('keypress', function(e) {
@@ -642,11 +654,7 @@
             const row = parseInt(selectedCell.dataset.row);
             const col = parseInt(selectedCell.dataset.col);
             
-            // Check if cell is editable (empty or hidden)
-            if (gridData[row][col] !== '_' && gridData[row][col] !== null) {
-                alert('You can only set solutions for empty or hidden cells.');
-                return;
-            }
+            
             
             // Show solution modal
             document.getElementById('solutionCellPos').textContent = 

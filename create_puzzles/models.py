@@ -4,15 +4,15 @@ from django.core.validators import MaxValueValidator,MinValueValidator
 
 class Item(models.Model):
     DIFFICULTY_CHOICES = (
-        ('Easy', 'Easy'),
-        ('Medium', 'Medium'),
-        ('Hard', 'Hard'),
+        (1, 'Easy'),
+        (2, 'Medium'),
+        (3, 'Hard'),
     )
 
     name = models.CharField(max_length=100)
     title = models.CharField(max_length=100)
     author = models.CharField(max_length=100,null=True,blank=True,default='Admin')
-    difficulty = models.CharField(max_length=20, choices=DIFFICULTY_CHOICES)
+    difficulty = models.IntegerField( choices=DIFFICULTY_CHOICES)
     row = models.SmallIntegerField(validators=[MinValueValidator(1),MaxValueValidator(20)],
                                    help_text="Enter a number between 1 and 20")
     column = models.SmallIntegerField(validators=[MinValueValidator(1),MaxValueValidator(20)],

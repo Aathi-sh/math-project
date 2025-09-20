@@ -18,7 +18,7 @@ def item_create(request):
             name=request.POST.get('name'),
             title=request.POST.get('title'),
             author=request.POST.get('author') or 'Admin',
-            difficulty=request.POST.get('difficulty'),
+            difficulty=int(request.POST.get('difficulty')),
             row=int(request.POST.get('row') or 0),
             column=int(request.POST.get('column') or 0),
             grid=request.POST.get('grid') or [],
@@ -44,7 +44,7 @@ def item_update(request, pk):
         item.name = request.POST.get('name')
         item.title = request.POST.get('title')
         item.author = request.POST.get('author') or 'Admin'
-        item.difficulty = request.POST.get('difficulty')
+        item.difficulty = int(request.POST.get('difficulty'))
         item.row = int(request.POST.get('row') or 0)
         item.column = int(request.POST.get('column') or 0)
         item.grid = request.POST.get('grid') or []

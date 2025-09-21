@@ -1,6 +1,6 @@
 {% extends 'layouts/base.html' %}
 {% load static %}
-{% block title %} Cross Math Game {% endblock title %}
+{% block title %} Cross Math Game - Limited View {% endblock title %}
 
 {% block extrastyle %}
 <!-- DataTables -->
@@ -10,8 +10,8 @@
 
 <style>
   .truncate{
-    max-width: 150px; /* Adjust the width as needed */
-    white-space: nowrap;  
+    max-width: 150px;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     cursor: pointer;
@@ -23,17 +23,17 @@
 
 {% block content %}
 <div class="content-wrapper">
-  <!-- Content Header (Page header) -->
+  <!-- Content Header -->
   <section class="content-header">
     <div class="container-fluid">
       <div class="row mb-2">
         <div class="col-sm-6">
-          <h1>Cross Math Game</h1>
+          <h1>Cross Math Game - Limited View</h1>
         </div>
         <div class="col-sm-6">
           <ol class="breadcrumb float-sm-right">
             <li class="breadcrumb-item"><a href="#">Home</a></li>
-            <li class="breadcrumb-item active">DataTables</li>
+            <li class="breadcrumb-item active">Limited DataTables</li>
           </ol>
         </div>
       </div>
@@ -48,85 +48,52 @@
           <!-- Card: Create Button + Table -->
           <div class="card">
             <div class="card-header">
-              
-           
-            
-
-          <!-- Card: DataTable default features -->
-          <div class="card">
-            
-              
-            </div>
-            <div class="card-body">
               <a href="{% url 'create_puzzles:item-create' %}" class="btn btn-primary mb-3"> Create New Item</a>
-              <table id="example1" class="table table-bordered table-striped">
+            </div>
+            
+            <div class="card-body">
+              <table id="limitedTable" class="table table-bordered table-striped">
                 <thead>
                   <tr>
                     <th>ID</th>
-                    <th>Title</th>
-                    <th>Description</th>
-                    <th>Row</th>
-                    <th>Column</th>
-                    <th>Level</th>
-                    <th>Grid</th>
-                    <th>Solution</th>
-                    <th>Choices</th>
+                    <th>Difficulty</th>
                     <th>Created At</th>
                     <th>Updated At</th>
                     <th>Created By</th>
                     <th>Updated By</th>
-                    <th>Options</th>
-                  </tr>
+                    
                 </thead>
-                <tbody id="tableBody">
+                <tbody>
                   {% for item in items %}
                   <tr>
                     <td>{{ item.id }}</td>
-                    <td>{{ item.title }}</td>
-                    <td>{{ item.name }}</td>
-                    <td>{{ item.row }}</td>
-                    <td>{{ item.column }}</td>
-                    <td>{{ item.difficulty}}</td>
-                    <td class="truncate" title="{{ item.grid|escape }}">{{ item.grid| truncatechars:50}}</td>
-                    <td class="truncate" title ="{{ item.solution|escape }}">{{item.solution| truncatechars:50}}</td>
-                    <td class="truncate" title ="{{ item.choices|escape }}">{{item.choices| truncatechars:50}}</td>
+                    <td>{{ item.difficulty }}</td>
                     <td>{{ item.created_at|date:"Y-m-d H:i" }}</td>
                     <td>{{ item.updated_at|date:"Y-m-d H:i" }}</td>
                     <td>{{ item.created_by }}</td>
                     <td>{{ item.updated_by }}</td>
-                    <td>
-                      <a href="{% url 'create_puzzles:item-update' item.pk %}" class="btn btn-sm btn-warning">Update</a>
-                      <a href="{% url 'create_puzzles:item-confirm-delete' item.pk %}" class="btn btn-sm btn-danger">Delete</a>
-                    </td>
+                    
                   </tr>
                   {% empty %}
                   <tr>
-                    <td colspan="6" class="text-center">No items found</td>
+                    <td colspan="7" class="text-center">No items found</td>
                   </tr>
                   {% endfor %}
                 </tbody>
                 <tfoot>
                   <tr>
                     <th>ID</th>
-                    <th>Title</th>
-                    <th>Description</th>
-                    <th>Row</th>
-                    <th>Column</th>
-                    <th>Level</th>
-                    <th>Grid</th>
-                    <th>Solution</th>
-                    <th>Choices</th>
+                    <th>Difficulty</th>
                     <th>Created At</th>
                     <th>Updated At</th>
                     <th>Created By</th>
                     <th>Updated By</th>
-                    <th>Options</th>
+                   
                   </tr>
                 </tfoot>
               </table>
             </div>
           </div>
-
         </div>
       </div>
     </div>
@@ -151,19 +118,12 @@
 
 <script>
   $(function () {
-    $("#example1").DataTable({
-      "responsive": true, "lengthChange": false, "autoWidth": false,
-      "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"]
-    }).buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
-    $('#example2').DataTable({
-      "paging": true,
-      "lengthChange": false,
-      "searching": false,
-      "ordering": true,
-      "info": true,
-      "autoWidth": false,
+    $("#limitedTable").DataTable({
       "responsive": true,
-    });
+      "lengthChange": false,
+      "autoWidth": false,
+      "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"]
+    }).buttons().container().appendTo('#limitedTable_wrapper .col-md-6:eq(0)');
   });
 </script>
 {% endblock extra_scripts %}

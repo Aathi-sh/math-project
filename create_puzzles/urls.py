@@ -8,6 +8,9 @@ urlpatterns = [
     path('update/<int:pk>/', views.item_update, name='item-update'),
     path('delete/<int:pk>/', views.item_delete, name='item-delete'),
     path('confirm_delete/<int:pk>/', views.item_confirm_delete, name='item-confirm-delete'),
+   
+   
+    path('leveltable/',views.level_item_list,name='level-item-list'),
     
     
 ]

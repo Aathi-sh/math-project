@@ -9,7 +9,11 @@ from .models import Item
 def item_list(request):
     items = Item.objects.all()
     return render(request, 'pages/tables/data.html', {'items': items})
-
+    
+def level_item_list(request):
+    
+    items =Item.objects.only('id','difficulty','created_at','updated_at','created_by','updated_by','active')
+    return render(request, 'pages/tables/leveltable.html', {'items': items})
 
 #  Create item
 def item_create(request):
@@ -59,10 +63,14 @@ def item_update(request, pk):
     return render(request, 'create_puzzles/item_form.html', {'item': item, 'is_update': True})
 
 
+
+    return render(request, 'create_puzzles/item_form.html', {'item': item, 'is_update': True})
 #  Confirm delete page
 def item_confirm_delete(request, pk):
     item = get_object_or_404(Item, pk=pk)
     return render(request, 'create_puzzles/item_confirm_delete.html', {'item': item})
+ 
+ 
 
 
 #  Delete item
@@ -71,3 +79,5 @@ def item_delete(request, pk):
     item.delete()
     messages.success(request, "Item deleted successfully.")
     return redirect('create_puzzles:item-list')
+
+

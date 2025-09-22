@@ -1,5 +1,6 @@
 {% load static %}
 
+{% block extrastyle %}
 <!-- DataTables CSS -->
 <link rel="stylesheet" href="{% static 'plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}">
 <link rel="stylesheet" href="{% static 'plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
@@ -13,44 +14,17 @@
     text-overflow: ellipsis;
     cursor: pointer;
   }
+  td.details-control {
+    background: url("{% static 'plugins/datatables/images/details_open.png' %}") no-repeat center center;
+    cursor: pointer;
+  }
+  tr.shown td.details-control {
+    background: url("{% static 'plugins/datatables/images/details_close.png' %}") no-repeat center center;
+  }
 </style>
+{% endblock extrastyle %}
 
-<!-- Optional button above table -->
-{% if show_create_button %}
-<a href="{{ create_url }}" class="btn btn-primary mb-3">Create New Item</a>
-{% endif %}
-
-<!-- Table -->
-<table id="{{ table_id|default:'example1' }}" class="table table-bordered table-striped">
-  <thead>
-    <tr>
-      {% for col in columns %}
-      <th>{{ col }}</th>
-      {% endfor %}
-    </tr>
-  </thead>
-  <tbody>
-    {% for row in data %}
-    <tr>
-      {% for col in columns %}
-      <td class="{% if truncate_cols and col in truncate_cols %}truncate{% endif %}" title="{{ row[col]|default:'' }}">{{ row[col]|default:'' }}</td>
-      {% endfor %}
-    </tr>
-    {% empty %}
-    <tr>
-      <td colspan="{{ columns|length }}" class="text-center">No items found</td>
-    </tr>
-    {% endfor %}
-  </tbody>
-  <tfoot>
-    <tr>
-      {% for col in columns %}
-      <th>{{ col }}</th>
-      {% endfor %}
-    </tr>
-  </tfoot>
-</table>
-
+{% block extra_scripts %}
 <!-- DataTables JS -->
 <script src="{% static 'plugins/datatables/jquery.dataTables.min.js' %}"></script>
 <script src="{% static 'plugins/datatables-bs4/js/dataTables.bootstrap4.min.js' %}"></script>
@@ -66,12 +40,42 @@
 <script src="{% static 'plugins/datatables-buttons/js/buttons.colVis.min.js' %}"></script>
 
 <script>
+  // Child row formatting (Update/Delete buttons inside)
+  function format(d) {
+    return `
+      <div>
+        <a href="/create_puzzles/${d[1]}/update" class="btn btn-sm btn-warning">Update</a>
+        <a href="/create_puzzles/${d[1]}/delete" class="btn btn-sm btn-danger">Delete</a>
+      </div>`;
+  }
+
   $(function () {
-    $("#{{ table_id|default:'example1' }}").DataTable({
-      responsive: true,
-      lengthChange: false,
-      autoWidth: false,
-      buttons: ["copy", "csv", "excel", "pdf", "print", "colvis"]
-    }).buttons().container().appendTo('#{{ table_id|default:"example1" }}_wrapper .col-md-6:eq(0)');
+    var table = $("#example1").DataTable({
+      "responsive": true,
+      "lengthChange": true,
+      "autoWidth": false,
+      "paging": true,
+      "searching": true,
+      "ordering": true,
+      "info": true,
+      "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"]
+    });
+
+    table.buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
+
+    // Expandable + button
+    $('#example1 tbody').on('click', 'td.details-control', function () {
+      var tr = $(this).closest('tr');
+      var row = table.row(tr);
+
+      if (row.child.isShown()) {
+        row.child.hide();
+        tr.removeClass('shown');
+      } else {
+        row.child(format(row.data())).show();
+        tr.addClass('shown');
+      }
+    });
   });
 </script>
+{% endblock extra_scripts %}

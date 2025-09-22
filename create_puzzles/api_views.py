@@ -18,7 +18,17 @@ class LimitedItemSerializer(ModelSerializer):
 class ItemViewSet(viewsets.ModelViewSet):
     queryset = Item.objects.all()
     serializer_class = ItemSerializer
-    
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        difficulty = self.request.query_params.get('difficulty')
+        if difficulty:
+            difficulty_map = {"easy": 1, "medium": 2, "hard": 3}
+            if difficulty.isdigit():
+                queryset = queryset.filter(difficulty=int(difficulty))
+            elif difficulty.lower() in difficulty_map:
+                queryset = queryset.filter(difficulty=difficulty_map[difficulty.lower()])
+        return queryset
 
     def list(self, request):
         items = self.get_queryset()
@@ -30,11 +40,7 @@ class ItemViewSet(viewsets.ModelViewSet):
             "full_data": serializer.data,
             "limited_data": limited_serializer.data
         }, status=status.HTTP_200_OK)
-    
 
-    
-    
-    
     def retrieve(self, request, pk=None):
         try:
             item = self.get_queryset().get(pk=pk)
@@ -57,8 +63,8 @@ class ItemViewSet(viewsets.ModelViewSet):
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            item = serializer.save()  # Save full data
-            limited_serializer = LimitedItemSerializer(item)  # Prepare limited data
+            item = serializer.save()
+            limited_serializer = LimitedItemSerializer(item)
             return Response({
                 "status": "success",
                 "message": "Item created successfully",
@@ -145,32 +151,44 @@ class ItemViewSet(viewsets.ModelViewSet):
                 "full_data": [],
                 "limited_data": []
             }, status=status.HTTP_404_NOT_FOUND)
-            
-            
+
+# Limited viewset with difficulty filter
 class LimitedItemViewSet(viewsets.ReadOnlyModelViewSet):
-        queryset = Item.objects.all()
-        serializer_class = LimitedItemSerializer
-        def list(self, request):
-            items = self.get_queryset()
-            serializer = self.get_serializer(items, many=True)
+    queryset = Item.objects.all()
+    serializer_class = LimitedItemSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        difficulty = self.request.query_params.get('difficulty')
+        if difficulty:
+            difficulty_map = {"easy": 1, "medium": 2, "hard": 3}
+            if difficulty.isdigit():
+                queryset = queryset.filter(difficulty=int(difficulty))
+            elif difficulty.lower() in difficulty_map:
+                queryset = queryset.filter(difficulty=difficulty_map[difficulty.lower()])
+        return queryset
+
+    def list(self, request):
+        items = self.get_queryset()
+        serializer = self.get_serializer(items, many=True)
+        return Response({
+            "status": "success",
+            "message": "Limited items retrieved successfully",
+            "limited_data": serializer.data
+        }, status=status.HTTP_200_OK)
+
+    def retrieve(self, request, pk=None):
+        try:
+            item = self.get_queryset().get(pk=pk)
+            serializer = self.get_serializer(item)
             return Response({
                 "status": "success",
-                "message": "Limited items retrieved successfully",
-                "limited_data": serializer.data
+                "message": "Limited item retrieved successfully",
+                "limited_data": [serializer.data]
             }, status=status.HTTP_200_OK)
-            
-        def retrieve(self, request, pk=None):
-            try:
-                item = self.get_queryset().get(pk=pk)
-                serializer = self.get_serializer(item)
-                return Response({
-                    "status": "success",
-                    "message": "Limited item retrieved successfully",
-                    "limited_data": [serializer.data]
-                }, status=status.HTTP_200_OK)
-            except Item.DoesNotExist:
-                return Response({
-                    "status": "failed",
-                    "message": "Item not found",
-                    "limited_data": []
-                }, status=status.HTTP_404_NOT_FOUND)                
+        except Item.DoesNotExist:
+            return Response({
+                "status": "failed",
+                "message": "Item not found",
+                "limited_data": []
+            }, status=status.HTTP_404_NOT_FOUND)

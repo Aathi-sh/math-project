@@ -4,7 +4,7 @@ from .api_views import ItemViewSet
 from .api_views import LimitedItemViewSet
 
 router = DefaultRouter()
-router.register(r'items', ItemViewSet,basename='item')
+router.register(r'items', ItemViewSet,basename='items')
 router.register(r'level-items',LimitedItemViewSet,basename='level-items')
 urlpatterns = router.urls
       

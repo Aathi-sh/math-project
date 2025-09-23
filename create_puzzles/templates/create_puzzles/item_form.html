@@ -222,29 +222,39 @@
             gap:10px;
         }
         .submit-btn {
-    background-color: green;
-    color: white;
-    padding: 10px 30px;
-    border-radius: 5px;
-    border: none;
-    cursor: pointer;
-    width: 200px;
-}
-
-.cancel-btn {
-    background-color: blue;
-    color: white;
-    padding: 10px 30px;
-    border-radius: 5px;
-    text-decoration: none;
-    display: inline-block;
-    width: 200px;
-    text-align: center;
-}
-
-.cancel-btn:hover {
-    background-color: #777;
-}
+            background-color: green;
+            color: white;
+            padding: 10px 30px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            width: 200px;
+        }
+        .cancel-btn {
+            background-color: blue;
+            color: white;
+            padding: 10px 30px;
+            border-radius: 5px;
+            text-decoration: none;
+            display: inline-block;
+            width: 200px;
+            text-align: center;
+        }
+        .cancel-btn:hover {
+            background-color: #777;
+        }
+        .type-controls {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+        .automated-controls {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border-left: 4px solid #0d6efd;
+        }
     </style>
     {% endblock extrastyle %}
     {% block content%}
@@ -286,17 +296,44 @@
                         <input type="number" class="form-control" id="colsInput" name="column"  min="1" max="15" placeholder="Enter a Number" value="{{item.column|default:""}}" required>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label"for="difficulty"> Level </label>
-                        <div style="display:flex; gap:8px; align-items:stretch ;flex-wrap:nowrap;">
-                        <select class="form-control" id="difficulty" name="difficulty" class="form-select form-select-sm" style="width:350px; min-width:0; length:200px;" required>
-                        <option value="" disabled{% if not is_update %}selected{% endif %}>Select a difficulty </option>
-                        <option value="1"{% if item.difficulty == 1 %}selected{% endif %}>Easy</option>
-                        <option value="2"{% if item.difficulty == 2 %}selected{% endif %}>Medium</option>
-                        <option value="3"{% if item.difficulty == 3 %}selected{% endif %}>Hard</option>
-                        </select>
-                    
-                    <label class="form-label">&nbsp;</label>
-                        <button type="button" id="generateGrid"  class="btn btn-primary"style="width:330px;">Generate Grid</button>
+                        <div class="type-controls">
+                            <div style="flex: 1;">
+                                <label class="form-label" for="difficulty"> Level </label>
+                                <select class="form-control" id="difficulty" name="difficulty" required>
+                                    <option value="" disabled {% if not is_update %}selected{% endif %}>Select a difficulty</option>
+                                    <option value="1" {% if item.difficulty == 1 %}selected{% endif %}>Easy</option>
+                                    <option value="2" {% if item.difficulty == 2 %}selected{% endif %}>Medium</option>
+                                    <option value="3" {% if item.difficulty == 3 %}selected{% endif %}>Hard</option>
+                                </select>
+                            </div>
+                            <div style="flex: 1;">
+                                <label class="form-label" for="type"> Type </label>
+                                <select class="form-control" id="type" name="type" required>
+                                    <option value="manual" {% if not item.type or item.type == 'manual' %}selected{% endif %}>Manual</option>
+                                    <option value="automated" {% if item.type == 'automated' %}selected{% endif %}>Automated</option>
+                                </select>
+                            </div>
+                            <div class="button-field">
+                                <button type="button" id="generateGrid" class="btn btn-primary">Generate Grid</button>
+                            </div>
+                        </div>
+                        
+                        <div id="automatedControls" class="automated-controls" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="equationCount" class="form-label">Number of Equations</label>
+                                    <input type="number" class="form-control" id="equationCount" min="1" max="10" value="4">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="choiceCount" class="form-label">Number of Choices</label>
+                                    <input type="number" class="form-control" id="choiceCount" min="5" max="20" value="12">
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <button type="button" id="generateAutomated" class="btn btn-success btn-sm">
+                                    <i class="fas fa-robot"></i> Generate Automated Grid
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -326,10 +363,9 @@
         </div>
 
         <div class="controls">
-            
-            <button  type ="button" id="validateGrid" class="btn btn-info btn-action" style="margin:5px 5px 5px 20px ; height:50px;"><i class="fas fa-check"></i> Validate Equations</button>
-            <button type ="button" id="exportJson" class="btn btn-dark btn-action" style="height: 50px; margin: 5px 0px 5px 0px;"><i class="fas fa-file-export"></i> Export JSON</button>
-            <button type ="button"  id="resetGrid" class="btn btn-warning btn-action" style="margin:5px 20px 5px 5px ; height:50px;"><i class="fas fa-redo"></i> Reset Grid</button>
+            <button type="button" id="validateGrid" class="btn btn-info btn-action" style="margin:5px 5px 5px 20px ; height:50px;"><i class="fas fa-check"></i> Validate Equations</button>
+            <button type="button" id="exportJson" class="btn btn-dark btn-action" style="height: 50px; margin: 5px 0px 5px 0px;"><i class="fas fa-file-export"></i> Export JSON</button>
+            <button type="button" id="resetGrid" class="btn btn-warning btn-action" style="margin:5px 20px 5px 5px ; height:50px;"><i class="fas fa-redo"></i> Reset Grid</button>
         </div>
 
         <div class="card" style="margin:20px;">
@@ -389,7 +425,7 @@
                         <div class="input-option special" data-value="clear">Clear</div>
                     </div>
                     <div class="controls">
-                    <button type ="button" id="setSolutionBtn" class="btn btn-success btn-action"><i class="fas fa-check-circle"></i> Set Solution</button>
+                    <button type="button" id="setSolutionBtn" class="btn btn-success btn-action"><i class="fas fa-check-circle"></i> Set Solution</button>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -406,7 +442,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Set Solution Value</h5>
-                    <button type="button"  class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <p>Enter the solution value for cell: <span id="solutionCellPos"></span></p>
@@ -444,20 +480,29 @@
             // Generate initial grid
             gridData = {{item.grid|safe|default:'[]'}};
             solutionData = {{item.solution|safe|default:'{}'}};
-            choices = {{item.choices|safe|default:'[]'}}; // ADDED: preload saved choices if editing
-             
+            choices = {{item.choices|safe|default:'[]'}};
             
             renderGrid();
-            renderChoices();  // ADDED: render any existing choices
+            renderChoices();
             updateJsonOutput();
             
             // Set up event listeners
             setupEventListeners();
+            
+            // Show/hide automated controls based on type
+            document.getElementById('type').addEventListener('change', function() {
+                const automatedControls = document.getElementById('automatedControls');
+                automatedControls.style.display = this.value === 'automated' ? 'block' : 'none';
+            });
+            
+            // Trigger change event to set initial state
+            document.getElementById('type').dispatchEvent(new Event('change'));
         });
 
         // Set up event listeners
         function setupEventListeners() {
             document.getElementById('generateGrid').addEventListener('click', generateGrid);
+            document.getElementById('generateAutomated').addEventListener('click', generateAutomatedGrid);
             document.getElementById('setSolutionBtn').addEventListener('click', setSolution);
             document.getElementById('validateGrid').addEventListener('click', validateGrid);
             document.getElementById('exportJson').addEventListener('click', exportJson);
@@ -473,15 +518,8 @@
             document.querySelectorAll('.input-option.number').forEach(option => {
                 option.addEventListener('click', function() {
                     const value = this.getAttribute('data-value');
-                    
-                    // if (this.classList.contains('selected')) {
-                    //     // this.classList.remove('selected');
-                    //     // selectedValues = selectedValues.filter(v => v !== value);
-                    // } else {
-                        this.classList.add('selected');
-                        selectedValues.push(value);
-                    // }
-                    
+                    this.classList.add('selected');
+                    selectedValues.push(value);
                     updateSelectedValuesDisplay();
                 });
             });
@@ -565,12 +603,9 @@
                 const value = customInput.value.trim();
                 
                 if (value) {
-                    // Check if this value is already selected
                     if (!selectedValues.includes(value)) {
                         selectedValues.push(value);
                         updateSelectedValuesDisplay();
-                        
-                        // Clear the input
                         customInput.value = '';
                     }
                 }
@@ -598,8 +633,25 @@
 
         // Generate grid based on user input
         function generateGrid() {
+            const type = document.getElementById('type').value;
+            
+            if (type === 'manual') {
+                generateManualGrid();
+            } else {
+                // Automated grid will be generated via separate button
+                alert('Use the "Generate Automated Grid" button for automated generation.');
+            }
+        }
+
+        // Generate manual grid
+        function generateManualGrid() {
             const rows = parseInt(document.getElementById('rowsInput').value);
             const cols = parseInt(document.getElementById('colsInput').value);
+            
+            if (isNaN(rows) || isNaN(cols) || rows < 1 || cols < 1) {
+                alert('Please enter valid row and column numbers.');
+                return;
+            }
             
             // Initialize grid data
             gridData = [];
@@ -611,14 +663,360 @@
                 gridData.push(row);
             }
             
-            // Reset solution
+            // Reset solution and choices
             solutionData = {};
+            choices = [];
             
-            // Render grid
+            // Render grid and choices
             renderGrid();
+            renderChoices();
             
             // Update JSON output
             updateJsonOutput();
+        }
+
+        // Generate automated grid based on difficulty
+        function generateAutomatedGrid() {
+            const difficulty = document.getElementById('difficulty').value;
+            const equationCount = parseInt(document.getElementById('equationCount').value) || 4;
+            const choiceCount = parseInt(document.getElementById('choiceCount').value) || 12;
+            
+            if (!difficulty) {
+                alert('Please select a difficulty level.');
+                return;
+            }
+            
+            // Generate grid based on difficulty
+            let generatedData;
+            switch (difficulty) {
+                case '1': // Easy
+                    generatedData = generateEasyLevel(equationCount, choiceCount);
+                    break;
+                case '2': // Medium
+                    generatedData = generateMediumLevel(equationCount, choiceCount);
+                    break;
+                case '3': // Hard
+                    generatedData = generateHardLevel(equationCount, choiceCount);
+                    break;
+                default:
+                    generatedData = generateEasyLevel(equationCount, choiceCount);
+            }
+            
+            // Update grid data, solution, and choices
+            gridData = generatedData.grid;
+            solutionData = generatedData.solution;
+            choices = generatedData.choices;
+            
+            // Update row and column inputs
+            document.getElementById('rowsInput').value = gridData.length;
+            document.getElementById('colsInput').value = gridData[0] ? gridData[0].length : 0;
+            
+            // Render grid and choices
+            renderGrid();
+            renderChoices();
+            
+            // Update JSON output
+            updateJsonOutput();
+            
+            alert('Automated grid generated successfully!');
+        }
+
+        // Generate easy level equations
+        function generateEasyLevel(equationCount = 4, choiceCount = 12) {
+            const grid = [];
+            const solution = {};
+            const requiredAnswers = [];
+            const visibleNumbers = [];
+            
+            for (let row = 0; row < equationCount; row++) {
+                const a = Math.floor(Math.random() * 4) + 1; // 1-4
+                const b = Math.floor(Math.random() * 4) + 1; // 1-4
+                const op = Math.random() > 0.5 ? '+' : '-';
+                const result = op === '+' ? a + b : a - b;
+                
+                // Only allow blanks on numbers (positions 0, 2, or 4)
+                const blankPositions = [0, 2, 4];
+                const blankPos = blankPositions[Math.floor(Math.random() * blankPositions.length)];
+                
+                const equation = new Array(5).fill('');
+                equation[0] = blankPos === 0 ? null : a;
+                equation[1] = op;
+                equation[2] = blankPos === 2 ? null : b;
+                equation[3] = '=';
+                equation[4] = blankPos === 4 ? null : result;
+                
+                // Calculate and store the solution
+                let solutionValue;
+                switch (blankPos) {
+                    case 0:
+                        solutionValue = op === '+' ? result - b : result + b;
+                        break;
+                    case 2:
+                        solutionValue = op === '+' ? result - a : a - result;
+                        break;
+                    case 4:
+                        solutionValue = op === '+' ? a + b : a - b;
+                        break;
+                    default:
+                        solutionValue = 0;
+                }
+                
+                if (solutionValue < 1) {
+                    row--; // Skip invalid equations
+                    continue;
+                }
+                
+                solution[`${row},${blankPos}`] = solutionValue;
+                requiredAnswers.push(solutionValue);
+                
+                // Track visible numbers
+                equation.forEach(cell => {
+                    if (typeof cell === 'number') visibleNumbers.push(cell);
+                });
+                
+                grid.push(equation);
+            }
+            
+            // Ensure we have the required number of equations
+            while (grid.length < equationCount) {
+                grid.push([2, '+', 3, '=', 5]); // Fallback equation
+                solution[`${grid.length-1},0`] = 2;
+                requiredAnswers.push(2);
+            }
+            
+            const choices = generateChoices(requiredAnswers, visibleNumbers, choiceCount, 1, 10);
+            
+            return { grid, solution, choices };
+        }
+
+        // Generate medium level equations
+        function generateMediumLevel(equationCount = 4, choiceCount = 15) {
+            const grid = [];
+            const solution = {};
+            const requiredAnswers = [];
+            const visibleNumbers = [];
+            
+            for (let row = 0; row < equationCount; row++) {
+                const equationType = Math.floor(Math.random() * 4);
+                let equation, solutionValue, blankPos;
+                
+                switch (equationType) {
+                    case 0: // a + b = c
+                        const a1 = Math.floor(Math.random() * 6) + 5; // 5-10
+                        const b1 = Math.floor(Math.random() * 6) + 5; // 5-10
+                        blankPos = getRandomBlankPosition([0, 2, 4]);
+                        equation = buildEquation(a1, '+', b1, '=', a1 + b1, blankPos);
+                        solutionValue = calculateMissingValue(a1, b1, a1 + b1, '+', blankPos);
+                        break;
+                    case 1: // a - b = c
+                        const a2 = Math.floor(Math.random() * 6) + 6; // 6-11
+                        const b2 = Math.floor(Math.random() * 5) + 1; // 1-5
+                        blankPos = getRandomBlankPosition([0, 2, 4]);
+                        equation = buildEquation(a2, '-', b2, '=', a2 - b2, blankPos);
+                        solutionValue = calculateMissingValue(a2, b2, a2 - b2, '-', blankPos);
+                        break;
+                    case 2: // a * b = c
+                        const a3 = Math.floor(Math.random() * 4) + 2; // 2-5
+                        const b3 = Math.floor(Math.random() * 4) + 2; // 2-5
+                        blankPos = getRandomBlankPosition([0, 2, 4]);
+                        equation = buildEquation(a3, '×', b3, '=', a3 * b3, blankPos);
+                        solutionValue = calculateMissingValue(a3, b3, a3 * b3, '×', blankPos);
+                        break;
+                    case 3: // a / b = c (ensure integer division)
+                        const b4 = Math.floor(Math.random() * 3) + 2; // 2-4
+                        const c4 = Math.floor(Math.random() * 4) + 2; // 2-5
+                        const a4 = b4 * c4;
+                        blankPos = getRandomBlankPosition([0, 2, 4]);
+                        equation = buildEquation(a4, '÷', b4, '=', c4, blankPos);
+                        solutionValue = calculateMissingValue(a4, b4, c4, '÷', blankPos);
+                        break;
+                }
+                
+                solution[`${row},${blankPos}`] = solutionValue;
+                requiredAnswers.push(solutionValue);
+                
+                equation.forEach(cell => {
+                    if (typeof cell === 'number') visibleNumbers.push(cell);
+                });
+                
+                grid.push(equation);
+            }
+            
+            const choices = generateChoices(requiredAnswers, visibleNumbers, choiceCount, 1, 30);
+            
+            return { grid, solution, choices };
+        }
+
+        // Generate hard level equations
+        function generateHardLevel(equationCount = 6, choiceCount = 20) {
+            const grid = [];
+            const solution = {};
+            const requiredAnswers = [];
+            const visibleNumbers = [];
+            
+            for (let row = 0; row < equationCount; row++) {
+                const equationType = Math.floor(Math.random() * 4);
+                let equation, solutionValue, blankPos;
+                
+                switch (equationType) {
+                    case 0: // a + b * c = d
+                        const b1 = Math.floor(Math.random() * 4) + 2; // 2-5
+                        const c1 = Math.floor(Math.random() * 4) + 2; // 2-5
+                        const a1 = Math.floor(Math.random() * 10) + 5; // 5-14
+                        const result1 = a1 + b1 * c1;
+                        blankPos = getRandomBlankPosition([0, 2, 4, 6]);
+                        equation = buildMultiOpEquation(a1, '+', b1, '×', c1, '=', result1, blankPos);
+                        solutionValue = calculateMultiOpMissingValue(a1, b1, c1, result1, ['+', '×'], blankPos);
+                        break;
+                    case 1: // a * b - c = d
+                        const a2 = Math.floor(Math.random() * 4) + 3; // 3-6
+                        const b2 = Math.floor(Math.random() * 4) + 3; // 3-6
+                        const c2 = Math.floor(Math.random() * 10) + 5; // 5-14
+                        const result2 = a2 * b2 - c2;
+                        blankPos = getRandomBlankPosition([0, 2, 4, 6]);
+                        equation = buildMultiOpEquation(a2, '×', b2, '-', c2, '=', result2, blankPos);
+                        solutionValue = calculateMultiOpMissingValue(a2, b2, c2, result2, ['×', '-'], blankPos);
+                        break;
+                    case 2: // a / b = c (integer division)
+                        const b3 = Math.floor(Math.random() * 3) + 2; // 2-4
+                        const c3 = Math.floor(Math.random() * 5) + 3; // 3-7
+                        const a3 = b3 * c3;
+                        blankPos = getRandomBlankPosition([0, 2, 4]);
+                        equation = buildEquation(a3, '÷', b3, '=', c3, blankPos);
+                        solutionValue = calculateMissingValue(a3, b3, c3, '÷', blankPos);
+                        break;
+                    case 3: // a - b / c = d (integer division)
+                        const c4 = Math.floor(Math.random() * 3) + 2; // 2-4
+                        const b4 = Math.floor(Math.random() * 8) + 4; // 4-11
+                        const a4 = Math.floor(Math.random() * 15) + 10; // 10-24
+                        const result4 = a4 - Math.floor(b4 / c4);
+                        blankPos = getRandomBlankPosition([0, 2, 4, 6]);
+                        equation = buildMultiOpEquation(a4, '-', b4, '÷', c4, '=', result4, blankPos);
+                        solutionValue = calculateMultiOpMissingValue(a4, b4, c4, result4, ['-', '÷'], blankPos);
+                        break;
+                }
+                
+                solution[`${row},${blankPos}`] = solutionValue;
+                requiredAnswers.push(solutionValue);
+                
+                equation.forEach(cell => {
+                    if (typeof cell === 'number') visibleNumbers.push(cell);
+                });
+                
+                grid.push(equation);
+            }
+            
+            const choices = generateChoices(requiredAnswers, visibleNumbers, choiceCount, 2, 100);
+            
+            return { grid, solution, choices };
+        }
+
+        // Helper functions for automated generation
+        function getRandomBlankPosition(positions) {
+            return positions[Math.floor(Math.random() * positions.length)];
+        }
+
+        function buildEquation(a, op1, b, equals, result, blankPos) {
+            return [
+                blankPos === 0 ? null : a,
+                op1,
+                blankPos === 2 ? null : b,
+                equals,
+                blankPos === 4 ? null : result,
+            ];
+        }
+
+        function buildMultiOpEquation(a, op1, b, op2, c, equals, result, blankPos) {
+            return [
+                blankPos === 0 ? null : a,
+                op1,
+                blankPos === 2 ? null : b,
+                op2,
+                blankPos === 4 ? null : c,
+                equals,
+                blankPos === 6 ? null : result,
+            ];
+        }
+
+        function calculateMissingValue(a, b, result, op, blankPos) {
+            switch (op) {
+                case '+':
+                    return blankPos === 0 ? result - b :
+                           blankPos === 2 ? result - a :
+                           a + b;
+                case '-':
+                    return blankPos === 0 ? result + b :
+                           blankPos === 2 ? a - result :
+                           a - b;
+                case '×':
+                    return blankPos === 0 ? Math.floor(result / b) :
+                           blankPos === 2 ? Math.floor(result / a) :
+                           a * b;
+                case '÷':
+                    return blankPos === 0 ? b * result :
+                           blankPos === 2 ? Math.floor(a / result) :
+                           Math.floor(a / b);
+                default:
+                    return 0;
+            }
+        }
+
+        function calculateMultiOpMissingValue(a, b, c, result, ops, blankPos) {
+            const op1 = ops[0];
+            const op2 = ops[1];
+            
+            switch (blankPos) {
+                case 0: // a
+                    if (op1 === '+' && op2 === '×') return result - (b * c);
+                    if (op1 === '×' && op2 === '-') return Math.floor((result + c) / b);
+                    if (op1 === '-' && op2 === '÷') return result + Math.floor(b / c);
+                    return 0;
+                case 2: // b
+                    if (op1 === '+' && op2 === '×') return Math.floor((result - a) / c);
+                    if (op1 === '×' && op2 === '-') return Math.floor((result + c) / a);
+                    if (op1 === '-' && op2 === '÷') return (a - result) * c;
+                    return 0;
+                case 4: // c
+                    if (op1 === '+' && op2 === '×') return Math.floor((result - a) / b);
+                    if (op1 === '×' && op2 === '-') return a * b - result;
+                    if (op1 === '-' && op2 === '÷') return Math.floor(b / (a - result));
+                    return 0;
+                case 6: // result
+                    if (op1 === '+' && op2 === '×') return a + b * c;
+                    if (op1 === '×' && op2 === '-') return a * b - c;
+                    if (op1 === '-' && op2 === '÷') return a - Math.floor(b / c);
+                    return 0;
+                default:
+                    return 0;
+            }
+        }
+
+        function generateChoices(requiredAnswers, visibleNumbers, count, min, max) {
+            const choices = [...requiredAnswers];
+            const visibleNonSolutions = visibleNumbers.filter(n => !requiredAnswers.includes(n));
+            
+            // Add some visible non-solution numbers
+            for (const num of visibleNonSolutions) {
+                if (choices.length < count && !choices.includes(num)) {
+                    choices.push(num);
+                }
+            }
+            
+            // Fill remaining with random numbers, ensuring no duplicates
+            while (choices.length < count) {
+                const randomNum = min + Math.floor(Math.random() * (max - min + 1));
+                if (!choices.includes(randomNum)) {
+                    choices.push(randomNum);
+                }
+            }
+            
+            // Shuffle the choices
+            for (let i = choices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [choices[i], choices[j]] = [choices[j], choices[i]];
+            }
+            
+            return choices;
         }
 
         // Render the grid
@@ -915,7 +1313,7 @@
         // Reset grid
         function resetGrid() {
             if (confirm('Are you sure you want to reset the grid? All changes will be lost.')) {
-                generateGrid();
+                generateManualGrid();
                 choices = [];
                 renderChoices();
             }
@@ -926,12 +1324,7 @@
     <a href="templates/dashboard" class="cancel-btn"> Cancel</a>
      <button type="submit" class="submit-btn" >
          {%if is_update%}Update {% else%}Create {%endif%}
-         
        </button>
-       
-     
     </div>
-                    
 </form>
-
- {% endblock content %}
+{% endblock content %}

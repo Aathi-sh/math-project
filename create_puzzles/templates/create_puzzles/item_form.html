@@ -474,13 +474,13 @@
                 option.addEventListener('click', function() {
                     const value = this.getAttribute('data-value');
                     
-                    if (this.classList.contains('selected')) {
-                        this.classList.remove('selected');
-                        selectedValues = selectedValues.filter(v => v !== value);
-                    } else {
+                    // if (this.classList.contains('selected')) {
+                    //     // this.classList.remove('selected');
+                    //     // selectedValues = selectedValues.filter(v => v !== value);
+                    // } else {
                         this.classList.add('selected');
                         selectedValues.push(value);
-                    }
+                    // }
                     
                     updateSelectedValuesDisplay();
                 });

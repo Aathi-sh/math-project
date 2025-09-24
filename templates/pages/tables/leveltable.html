@@ -67,7 +67,7 @@
                   {% for item in items %}
                   <tr>
                     <td>{{ item.id }}</td>
-                    <td>{{ item.difficulty }}</td>
+                    <td>{{ item.difficulty.value}}</td>
                     <td>{{ item.created_at|date:"Y-m-d H:i" }}</td>
                     <td>{{ item.updated_at|date:"Y-m-d H:i" }}</td>
                     <td>{{ item.created_by }}</td>

@@ -298,14 +298,20 @@
                     <div class="col-md-6">
                         <div class="type-controls">
                             <div style="flex: 1;">
-                                <label class="form-label" for="difficulty"> Level </label>
-                                <select class="form-control" id="difficulty" name="difficulty" required>
-                                    <option value="" disabled {% if not is_update %}selected{% endif %}>Select a difficulty</option>
-                                    <option value="1" {% if item.difficulty == 1 %}selected{% endif %}>Easy</option>
-                                    <option value="2" {% if item.difficulty == 2 %}selected{% endif %}>Medium</option>
-                                    <option value="3" {% if item.difficulty == 3 %}selected{% endif %}>Hard</option>
-                                </select>
+                                   <label class="form-label" for="difficulty">Level</label>
+<select class="form-control" id="difficulty" name="difficulty" required>
+    <option value="" disabled {% if not is_update %}selected{% endif %}>Select a difficulty</option>
+    {% for level in difficulties %}
+        <option value="{{ level.value }}"
+            {% if is_update and item.difficulty.value == level.value %}selected{% endif %}>
+            {{ level.name }}
+        </option>
+    {% endfor %}
+</select>
                             </div>
+                            
+
+                            
                             <div style="flex: 1;">
                                 <label class="form-label" for="type"> Type </label>
                                 <select class="form-control" id="type" name="type" required>

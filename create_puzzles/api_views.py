@@ -121,7 +121,6 @@ class ItemViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_404_NOT_FOUND)
 
 
-# Limited table viewset (read-only)
 class LimitedItemViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Item.objects.all()
     serializer_class = LimitedItemSerializer
@@ -138,25 +137,67 @@ class LimitedItemViewSet(viewsets.ReadOnlyModelViewSet):
 
     def list(self, request):
         items = self.get_queryset()
-        serializer = self.get_serializer(items, many=True)
+        difficulty_order = ["Easy", "Medium", "Hard", "Expert"]
+
+        ordered_data = []
+        auto_id = 1
+
+        # For each difficulty, pick the first matching item (if any)
+        for level in difficulty_order:
+            obj = items.filter(difficulty__name__iexact=level).first()
+            if obj:
+                serialized = self.get_serializer(obj).data
+                ordered_data.append({
+                    "id": auto_id,
+                    "difficulty": serialized.get("difficulty"),
+                    "created_by": serialized.get("created_by"),
+                    "updated_by": serialized.get("updated_by"),
+                    "active": serialized.get("active")
+                })
+                auto_id += 1
+
         return Response({
             "status": "success",
             "message": "Limited items retrieved successfully",
-            "limited_data": serializer.data
+            "limited_data": ordered_data
         }, status=status.HTTP_200_OK)
 
-    def retrieve(self, request, pk=None):
-        try:
-            item = self.get_queryset().get(pk=pk)
-            serializer = self.get_serializer(item)
-            return Response({
-                "status": "success",
-                "message": "Limited item retrieved successfully",
-                "limited_data": [serializer.data]
-            }, status=status.HTTP_200_OK)
-        except Item.DoesNotExist:
-            return Response({
-                "status": "failed",
-                "message": "Item not found",
-                "limited_data": []
-            }, status=status.HTTP_404_NOT_FOUND)
+# # Limited table viewset (read-only)
+# class LimitedItemViewSet(viewsets.ReadOnlyModelViewSet):
+#     queryset = Item.objects.all()
+#     serializer_class = LimitedItemSerializer
+
+#     def get_queryset(self):
+#         queryset = super().get_queryset()
+#         difficulty = self.request.query_params.get('difficulty')
+#         if difficulty:
+#             if difficulty.isdigit():
+#                 queryset = queryset.filter(difficulty__value=int(difficulty))
+#             else:
+#                 queryset = queryset.filter(difficulty__name__iexact=difficulty)
+#         return queryset
+
+#     def list(self, request):
+#         items = self.get_queryset()
+#         serializer = self.get_serializer(items, many=True)
+#         return Response({
+#             "status": "success",
+#             "message": "Limited items retrieved successfully",
+#             "limited_data": serializer.data
+#         }, status=status.HTTP_200_OK)
+
+#     def retrieve(self, request, pk=None):
+#         try:
+#             item = self.get_queryset().get(pk=pk)
+#             serializer = self.get_serializer(item)
+#             return Response({
+#                 "status": "success",
+#                 "message": "Limited item retrieved successfully",
+#                 "limited_data": [serializer.data]
+#             }, status=status.HTTP_200_OK)
+#         except Item.DoesNotExist:
+#             return Response({
+#                 "status": "failed",
+#                 "message": "Item not found",
+#                 "limited_data": []
+#             }, status=status.HTTP_404_NOT_FOUND)

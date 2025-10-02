@@ -467,8 +467,8 @@
      {% block extra_scripts %}
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
- 
- <script>
+   
+    <script>
         // Global variables
         let gridData = [];
         let solutionData = {};
@@ -727,7 +727,7 @@
 
         // Generate easy level equations (like the provided example)
         function generateEasyLevel(equationCount = 4, choiceCount = 12) {
-            // Create a grid similar to the provided easy example, replacing "?" with null
+            // Create a grid similar to the provided easy example
             const grid = [
                 ["9", "-", null, "=", null, "_", "21", "+", "19", "=", null],
                 ["_", "_", "+", "_", "-", "_", "_", "_", "-", "_", "_"],
@@ -763,7 +763,7 @@
 
         // Generate medium level equations (like the provided example)
         function generateMediumLevel(equationCount = 4, choiceCount = 15) {
-            // Create a grid similar to the provided medium example, replacing "?" with null
+            // Create a grid similar to the provided medium example
             const grid = [
                 [null, "×", "11", "=", "33", "_", null, "+", "9", "=", "34"],
                 ["_", "_", "-", "_", "_", "_", "_", "_", "+", "_", "_"],
@@ -799,7 +799,7 @@
 
         // Generate hard level equations (like the provided example)
         function generateHardLevel(equationCount = 6, choiceCount = 20) {
-            // Create a grid similar to the provided hard example, replacing "?" with null
+            // Create a grid similar to the provided hard example
             const grid = [
                 [null, "_", null, "+", "5", "=", null, "_", "_", "_", "_"],
                 ["+", "_", "-", "_", "_", "_", "+", "_", "_", "_", "_"],
@@ -843,7 +843,7 @@
 
         // Generate expert level equations (like the provided example)
         function generateExpertLevel(equationCount = 8, choiceCount = 24) {
-            // Create a grid similar to the provided expert example, replacing "?" with null
+            // Create a grid similar to the provided expert example
             const grid = [
                 [null, "_", "22", "_", "_", "_", null, "+", "4", "=", null, "_", "_"],
                 ["×", "_", "-", "_", "_", "_", "+", "_", "+", "_", "×", "_", "_"],
@@ -981,10 +981,6 @@
                         }
                     });
                 });
-            } else if (currentValue === null) {
-                // If the cell is a drop area (null), select the "Drop Area" option
-                document.querySelector('.input-option[data-value="null"]').classList.add('selected');
-                selectedValues = ['null'];
             }
             
             updateSelectedValuesDisplay();
@@ -1006,9 +1002,6 @@
                 if (hasOnlyNumbers) {
                     // Merge numbers into a single value (e.g., 1 and 2 become 12)
                     gridData[row][col] = selectedValues.join('');
-                } else if (selectedValues[0] === 'null') {
-                    // Set as null for drop areas
-                    gridData[row][col] = null;
                 } else {
                     // For operators and special values, use the first selected value
                     gridData[row][col] = selectedValues[0];
@@ -1074,7 +1067,7 @@
             const cellKey = `${row},${col}`;
             solutionData[cellKey] = parseInt(value);
             
-            // Mark cell as input cell (null for droppable areas)
+            // Mark cell as input cell
             if (gridData[row][col] === '_') {
                 gridData[row][col] = null;
             }
@@ -1197,7 +1190,7 @@
             }
         }
     </script>
-    
+   
    {% endblock extra_scripts  %}
    <div class="form-buttons" style="display:flex; justify-content:flex-end; gap: 10px; margin:20px;">
     <a href="templates/dashboard" class="cancel-btn"> Cancel</a>

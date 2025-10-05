@@ -1,5 +1,5 @@
 from django.urls import path,include
-from . import views
+from . import views,level_views
 app_name = 'create_puzzles'
 
 urlpatterns = [
@@ -11,6 +11,9 @@ urlpatterns = [
    
    
     path('leveltable/',views.level_item_list,name='level-item-list'),
+    
+    path('leveles/',level_views.levels_list,name='levels-list'),
+    
     
     
 ]

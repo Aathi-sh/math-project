@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from .models import Item, Difficulty
-from .serializers import ItemSerializer, LimitedItemSerializer
+from .models import Item, Difficulty,puzzleLevel
+from .serializers import ItemSerializer, LimitedItemSerializer,levelTableSerializer
 
 # Full table viewset
 class ItemViewSet(viewsets.ModelViewSet):
@@ -155,6 +155,49 @@ class LimitedItemViewSet(viewsets.ReadOnlyModelViewSet):
                 "limited_data": [serializer.data]
             }, status=status.HTTP_200_OK)
         except Item.DoesNotExist:
+            return Response({
+                "status": "failed",
+                "message": "Item not found",
+                "limited_data": []
+            }, status=status.HTTP_404_NOT_FOUND)
+            
+            
+            
+            
+            # Limited table viewset (read-only)
+class LevelTableViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = puzzleLevel.objects.all()
+    serializer_class = levelTableSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        difficulty = self.request.query_params.get('difficulty')
+        if difficulty:
+            if difficulty.isdigit():
+                queryset = queryset.filter(difficulty__value=int(difficulty))
+            else:
+                queryset = queryset.filter(difficulty__name__iexact=difficulty)
+        return queryset
+
+    def list(self, request):
+        items = self.get_queryset()
+        serializer = self.get_serializer(items, many=True)
+        return Response({
+            "status": "success",
+            "message": "Limited items retrieved successfully",
+            "limited_data": serializer.data
+        }, status=status.HTTP_200_OK)
+
+    def retrieve(self, request, pk=None):
+        try:
+            item = self.get_queryset().get(pk=pk)
+            serializer = self.get_serializer(item)
+            return Response({
+                "status": "success",
+                "message": "Limited item retrieved successfully",
+                "limited_data": [serializer.data]
+            }, status=status.HTTP_200_OK)
+        except puzzleLevel.DoesNotExist:
             return Response({
                 "status": "failed",
                 "message": "Item not found",

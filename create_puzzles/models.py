@@ -46,3 +46,20 @@ class Item(models.Model):
     def difficulty_name(self):
         # Returns the text for API, not stored in DB
         return self.difficulty.name if self.difficulty else None
+    
+class puzzleLevel(models.Model):
+        difficulty = models.ForeignKey(
+        Difficulty, 
+        on_delete=models.CASCADE, 
+        related_name='puzzle_levels',
+        to_field='value',  # join on numeric value
+        )
+        created_at = models.DateTimeField(auto_now_add=True)
+        updated_at = models.DateTimeField(auto_now=True)
+        created_by = models.IntegerField(null=True, blank=True)
+        updated_by = models.IntegerField(null=True, blank=True)
+
+        def __str__(self):
+             return f"Level - {self.difficulty.name}"
+
+        

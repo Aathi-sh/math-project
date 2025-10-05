@@ -918,6 +918,91 @@
             
             return { grid, solution, choices };
         }
+         // Generate expert level equations
+function generateExpertLevel(equationCount = 8, choiceCount = 25) {
+    const grid = [];
+    const solution = {};
+    const requiredAnswers = [];
+    const visibleNumbers = [];
+
+    for (let row = 0; row < equationCount; row++) {
+        const equationType = Math.floor(Math.random() * 5); // 5 types for expert
+        let equation, solutionValue, blankPos;
+
+        switch (equationType) {
+            case 0: // a + b * c - d = e
+                const a1 = Math.floor(Math.random() * 20) + 10; // 10-29
+                const b1 = Math.floor(Math.random() * 10) + 5;  // 5-14
+                const c1 = Math.floor(Math.random() * 5) + 2;   // 2-6
+                const d1 = Math.floor(Math.random() * 10) + 5;  // 5-14
+                const result1 = a1 + b1 * c1 - d1;
+                blankPos = getRandomBlankPosition([0,2,4,6,8]);
+                equation = buildMultiOpEquation(a1, '+', b1, '×', c1, '-', d1, '=', result1, blankPos);
+                solutionValue = calculateMultiOpMissingValue(a1, b1, c1, d1, result1, ['+', '×', '-'], blankPos);
+                break;
+
+            case 1: // (a * b) / c + d = e
+                const a2 = Math.floor(Math.random() * 15) + 5;  // 5-19
+                const b2 = Math.floor(Math.random() * 10) + 3;  // 3-12
+                const c2 = Math.floor(Math.random() * 4) + 2;   // 2-5
+                const d2 = Math.floor(Math.random() * 20) + 5;  // 5-24
+                const result2 = Math.floor((a2 * b2) / c2) + d2;
+                blankPos = getRandomBlankPosition([0,2,4,6,8]);
+                equation = buildMultiOpEquation(a2, '×', b2, '÷', c2, '+', d2, '=', result2, blankPos);
+                solutionValue = calculateMultiOpMissingValue(a2, b2, c2, d2, result2, ['×','÷','+'], blankPos);
+                break;
+
+            case 2: // a - (b + c) * d = e
+                const a3 = Math.floor(Math.random() * 30) + 20; // 20-49
+                const b3 = Math.floor(Math.random() * 10) + 5;  // 5-14
+                const c3 = Math.floor(Math.random() * 10) + 1;  // 1-10
+                const d3 = Math.floor(Math.random() * 4) + 2;   // 2-5
+                const result3 = a3 - (b3 + c3) * d3;
+                blankPos = getRandomBlankPosition([0,2,4,6,8]);
+                equation = buildMultiOpEquation(a3, '-', b3, '+', c3, '×', d3, '=', result3, blankPos);
+                solutionValue = calculateMultiOpMissingValue(a3, b3, c3, d3, result3, ['-','+','×'], blankPos);
+                break;
+
+            case 3: // a / b + c * d - e = f
+                const b4 = Math.floor(Math.random() * 5) + 2;   // 2-6
+                const c4 = Math.floor(Math.random() * 8) + 3;   // 3-10
+                const d4 = Math.floor(Math.random() * 6) + 2;   // 2-7
+                const e4 = Math.floor(Math.random() * 10) + 5;  // 5-14
+                const a4 = b4 * Math.floor(Math.random() * 10 + 2); // ensure divisible
+                const result4 = Math.floor(a4 / b4) + c4 * d4 - e4;
+                blankPos = getRandomBlankPosition([0,2,4,6,8,10]);
+                equation = buildMultiOpEquation(a4, '÷', b4, '+', c4, '×', d4, '-', e4, '=', result4, blankPos);
+                solutionValue = calculateMultiOpMissingValue(a4, b4, c4, d4, e4, result4, ['÷','+','×','-'], blankPos);
+                break;
+
+            case 4: // Complex mix: (a + b) * c / d - e = f
+                const a5 = Math.floor(Math.random() * 20) + 5;  // 5-24
+                const b5 = Math.floor(Math.random() * 15) + 3;  // 3-17
+                const c5 = Math.floor(Math.random() * 6) + 2;   // 2-7
+                const d5 = Math.floor(Math.random() * 5) + 2;   // 2-6
+                const e5 = Math.floor(Math.random() * 10) + 1;  // 1-10
+                const result5 = Math.floor((a5 + b5) * c5 / d5) - e5;
+                blankPos = getRandomBlankPosition([0,2,4,6,8,10]);
+                equation = buildMultiOpEquation(a5, '+', b5, '×', c5, '÷', d5, '-', e5, '=', result5, blankPos);
+                solutionValue = calculateMultiOpMissingValue(a5, b5, c5, d5, e5, result5, ['+','×','÷','-'], blankPos);
+                break;
+        }
+
+        solution[`${row},${blankPos}`] = solutionValue;
+        requiredAnswers.push(solutionValue);
+
+        equation.forEach(cell => {
+            if (typeof cell === 'number') visibleNumbers.push(cell);
+        });
+
+        grid.push(equation);
+    }
+
+    const choices = generateChoices(requiredAnswers, visibleNumbers, choiceCount, 5, 200);
+
+    return { grid, solution, choices };
+}
+
 
         // Helper functions for automated generation
         function getRandomBlankPosition(positions) {

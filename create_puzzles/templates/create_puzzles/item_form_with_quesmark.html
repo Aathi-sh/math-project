@@ -467,8 +467,8 @@
      {% block extra_scripts %}
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
- 
- <script>
+   
+    <script>
         // Global variables
         let gridData = [];
         let solutionData = {};
@@ -727,7 +727,7 @@
 
         // Generate easy level equations (like the provided example)
         function generateEasyLevel(equationCount = 4, choiceCount = 12) {
-            // Create a grid similar to the provided easy example, replacing "?" with null
+            // Create a grid similar to the provided easy example
             const grid = [
                 ["9", "-", null, "=", null, "_", "21", "+", "19", "=", null],
                 ["_", "_", "+", "_", "-", "_", "_", "_", "-", "_", "_"],
@@ -763,7 +763,7 @@
 
         // Generate medium level equations (like the provided example)
         function generateMediumLevel(equationCount = 4, choiceCount = 15) {
-            // Create a grid similar to the provided medium example, replacing "?" with null
+            // Create a grid similar to the provided medium example
             const grid = [
                 [null, "×", "11", "=", "33", "_", null, "+", "9", "=", "34"],
                 ["_", "_", "-", "_", "_", "_", "_", "_", "+", "_", "_"],
@@ -799,7 +799,7 @@
 
         // Generate hard level equations (like the provided example)
         function generateHardLevel(equationCount = 6, choiceCount = 20) {
-            // Create a grid similar to the provided hard example, replacing "?" with null
+            // Create a grid similar to the provided hard example
             const grid = [
                 [null, "_", null, "+", "5", "=", null, "_", "_", "_", "_"],
                 ["+", "_", "-", "_", "_", "_", "+", "_", "_", "_", "_"],
@@ -840,95 +840,10 @@
             
             return { grid, solution, choices };
         }
-         // Generate expert level equations
-function generateExpertLevel(equationCount = 8, choiceCount = 25) {
-    const grid = [];
-    const solution = {};
-    const requiredAnswers = [];
-    const visibleNumbers = [];
-
-    for (let row = 0; row < equationCount; row++) {
-        const equationType = Math.floor(Math.random() * 5); // 5 types for expert
-        let equation, solutionValue, blankPos;
-
-        switch (equationType) {
-            case 0: // a + b * c - d = e
-                const a1 = Math.floor(Math.random() * 20) + 10; // 10-29
-                const b1 = Math.floor(Math.random() * 10) + 5;  // 5-14
-                const c1 = Math.floor(Math.random() * 5) + 2;   // 2-6
-                const d1 = Math.floor(Math.random() * 10) + 5;  // 5-14
-                const result1 = a1 + b1 * c1 - d1;
-                blankPos = getRandomBlankPosition([0,2,4,6,8]);
-                equation = buildMultiOpEquation(a1, '+', b1, '×', c1, '-', d1, '=', result1, blankPos);
-                solutionValue = calculateMultiOpMissingValue(a1, b1, c1, d1, result1, ['+', '×', '-'], blankPos);
-                break;
-
-            case 1: // (a * b) / c + d = e
-                const a2 = Math.floor(Math.random() * 15) + 5;  // 5-19
-                const b2 = Math.floor(Math.random() * 10) + 3;  // 3-12
-                const c2 = Math.floor(Math.random() * 4) + 2;   // 2-5
-                const d2 = Math.floor(Math.random() * 20) + 5;  // 5-24
-                const result2 = Math.floor((a2 * b2) / c2) + d2;
-                blankPos = getRandomBlankPosition([0,2,4,6,8]);
-                equation = buildMultiOpEquation(a2, '×', b2, '÷', c2, '+', d2, '=', result2, blankPos);
-                solutionValue = calculateMultiOpMissingValue(a2, b2, c2, d2, result2, ['×','÷','+'], blankPos);
-                break;
-
-            case 2: // a - (b + c) * d = e
-                const a3 = Math.floor(Math.random() * 30) + 20; // 20-49
-                const b3 = Math.floor(Math.random() * 10) + 5;  // 5-14
-                const c3 = Math.floor(Math.random() * 10) + 1;  // 1-10
-                const d3 = Math.floor(Math.random() * 4) + 2;   // 2-5
-                const result3 = a3 - (b3 + c3) * d3;
-                blankPos = getRandomBlankPosition([0,2,4,6,8]);
-                equation = buildMultiOpEquation(a3, '-', b3, '+', c3, '×', d3, '=', result3, blankPos);
-                solutionValue = calculateMultiOpMissingValue(a3, b3, c3, d3, result3, ['-','+','×'], blankPos);
-                break;
-
-            case 3: // a / b + c * d - e = f
-                const b4 = Math.floor(Math.random() * 5) + 2;   // 2-6
-                const c4 = Math.floor(Math.random() * 8) + 3;   // 3-10
-                const d4 = Math.floor(Math.random() * 6) + 2;   // 2-7
-                const e4 = Math.floor(Math.random() * 10) + 5;  // 5-14
-                const a4 = b4 * Math.floor(Math.random() * 10 + 2); // ensure divisible
-                const result4 = Math.floor(a4 / b4) + c4 * d4 - e4;
-                blankPos = getRandomBlankPosition([0,2,4,6,8,10]);
-                equation = buildMultiOpEquation(a4, '÷', b4, '+', c4, '×', d4, '-', e4, '=', result4, blankPos);
-                solutionValue = calculateMultiOpMissingValue(a4, b4, c4, d4, e4, result4, ['÷','+','×','-'], blankPos);
-                break;
-
-            case 4: // Complex mix: (a + b) * c / d - e = f
-                const a5 = Math.floor(Math.random() * 20) + 5;  // 5-24
-                const b5 = Math.floor(Math.random() * 15) + 3;  // 3-17
-                const c5 = Math.floor(Math.random() * 6) + 2;   // 2-7
-                const d5 = Math.floor(Math.random() * 5) + 2;   // 2-6
-                const e5 = Math.floor(Math.random() * 10) + 1;  // 1-10
-                const result5 = Math.floor((a5 + b5) * c5 / d5) - e5;
-                blankPos = getRandomBlankPosition([0,2,4,6,8,10]);
-                equation = buildMultiOpEquation(a5, '+', b5, '×', c5, '÷', d5, '-', e5, '=', result5, blankPos);
-                solutionValue = calculateMultiOpMissingValue(a5, b5, c5, d5, e5, result5, ['+','×','÷','-'], blankPos);
-                break;
-        }
-
-        solution[`${row},${blankPos}`] = solutionValue;
-        requiredAnswers.push(solutionValue);
-
-        equation.forEach(cell => {
-            if (typeof cell === 'number') visibleNumbers.push(cell);
-        });
-
-        grid.push(equation);
-    }
-
-    const choices = generateChoices(requiredAnswers, visibleNumbers, choiceCount, 5, 200);
-
-    return { grid, solution, choices };
-}
-
 
         // Generate expert level equations (like the provided example)
         function generateExpertLevel(equationCount = 8, choiceCount = 24) {
-            // Create a grid similar to the provided expert example, replacing "?" with null
+            // Create a grid similar to the provided expert example
             const grid = [
                 [null, "_", "22", "_", "_", "_", null, "+", "4", "=", null, "_", "_"],
                 ["×", "_", "-", "_", "_", "_", "+", "_", "+", "_", "×", "_", "_"],
@@ -1066,10 +981,6 @@ function generateExpertLevel(equationCount = 8, choiceCount = 25) {
                         }
                     });
                 });
-            } else if (currentValue === null) {
-                // If the cell is a drop area (null), select the "Drop Area" option
-                document.querySelector('.input-option[data-value="null"]').classList.add('selected');
-                selectedValues = ['null'];
             }
             
             updateSelectedValuesDisplay();
@@ -1091,9 +1002,6 @@ function generateExpertLevel(equationCount = 8, choiceCount = 25) {
                 if (hasOnlyNumbers) {
                     // Merge numbers into a single value (e.g., 1 and 2 become 12)
                     gridData[row][col] = selectedValues.join('');
-                } else if (selectedValues[0] === 'null') {
-                    // Set as null for drop areas
-                    gridData[row][col] = null;
                 } else {
                     // For operators and special values, use the first selected value
                     gridData[row][col] = selectedValues[0];
@@ -1159,7 +1067,7 @@ function generateExpertLevel(equationCount = 8, choiceCount = 25) {
             const cellKey = `${row},${col}`;
             solutionData[cellKey] = parseInt(value);
             
-            // Mark cell as input cell (null for droppable areas)
+            // Mark cell as input cell
             if (gridData[row][col] === '_') {
                 gridData[row][col] = null;
             }
@@ -1282,7 +1190,7 @@ function generateExpertLevel(equationCount = 8, choiceCount = 25) {
             }
         }
     </script>
-    
+   
    {% endblock extra_scripts  %}
    <div class="form-buttons" style="display:flex; justify-content:flex-end; gap: 10px; margin:20px;">
     <a href="templates/dashboard" class="cancel-btn"> Cancel</a>

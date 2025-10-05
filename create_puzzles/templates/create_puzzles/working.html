@@ -468,7 +468,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
  
- <script>
+
+    <script>
         // Global variables
         let gridData = [];
         let solutionData = {};
@@ -679,7 +680,7 @@
         // Generate automated grid based on difficulty
         function generateAutomatedGrid() {
             const difficulty = document.getElementById('difficulty').value;
-            const equationCount = parseInt(document.getElementById('equationCount').value) || 4;
+            const equationCount = parseInt(document.getElementById('equationCount').value) || 5;
             const choiceCount = parseInt(document.getElementById('choiceCount').value) || 12;
             
             if (!difficulty) {
@@ -725,254 +726,417 @@
             alert('Automated grid generated successfully!');
         }
 
-        // Generate easy level equations (like the provided example)
-        function generateEasyLevel(equationCount = 4, choiceCount = 12) {
-            // Create a grid similar to the provided easy example, replacing "?" with null
-            const grid = [
-                ["9", "-", null, "=", null, "_", "21", "+", "19", "=", null],
-                ["_", "_", "+", "_", "-", "_", "_", "_", "-", "_", "_"],
-                ["30", "_", null, "_", null, "-", null, "=", null, "_", "_"],
-                ["-", "_", "=", "_", "=", "_", "×", "_", "=", "_", "_"],
-                [null, "÷", "7", "=", null, "_", "23", "-", null, "=", null],
-                ["=", "_", "_", "_", "_", "_", "=", "_", "_", "_", "-"],
-                ["16", "+", null, "=", "37", "_", null, "-", "22", "=", "1"],
-                ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "="],
-                ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "8"]
+        // Generate easy level equations with dynamic structure
+        function generateEasyLevel(equationCount = 5, choiceCount = 12) {
+            const grid = initializeGrid(9, 11);
+            const solution = {};
+            const allSolutions = [];
+            
+            // Define simple equations for easy level
+            const equations = [
+                // Horizontal equations
+                { row: 0, col: 0, dir: 'h', values: [9, '-', null, '=', null] },
+                { row: 0, col: 6, dir: 'h', values: [21, '+', 19, '=', null] },
+                { row: 2, col: 0, dir: 'h', values: [30, '-', null, '-', null, '=', null] },
+                { row: 4, col: 0, dir: 'h', values: [null, '÷', 7, '=', null] },
+                { row: 4, col: 6, dir: 'h', values: [23, '-', null, '=', null] },
+                { row: 6, col: 0, dir: 'h', values: [16, '+', null, '=', 37] },
+                { row: 6, col: 6, dir: 'h', values: [null, '-', 22, '=', 1] },
+                
+                // Vertical equations
+                { row: 0, col: 2, dir: 'v', values: [null, '+', null, '=', null] },
+                { row: 0, col: 4, dir: 'v', values: [null, '-', null, '=', 2] },
+                { row: 0, col: 10, dir: 'v', values: [null, '-', null, '=', 8] }
             ];
             
-            const solution = {
-                "4,10": 9,
-                "4,8": 14,
-                "2,6": 1,
-                "6,6": 23,
-                "6,2": 21,
-                "4,0": 14,
-                "2,8": 5,
-                "0,10": 40,
-                "4,4": 2,
-                "0,2": 1,
-                "0,4": 8,
-                "2,4": 6,
-                "2,2": 1
-            };
+            // Place equations on grid
+            equations.forEach(eq => {
+                placeEquation(grid, eq);
+                
+                // Calculate solutions
+                if (eq.dir === 'h') {
+                    if (eq.values[0] === 9 && eq.values[1] === '-') {
+                        solution[`${eq.row},${eq.col+2}`] = 1;
+                        solution[`${eq.row},${eq.col+4}`] = 8;
+                        allSolutions.push(1, 8);
+                    } else if (eq.values[0] === 21 && eq.values[1] === '+') {
+                        solution[`${eq.row},${eq.col+4}`] = 40;
+                        allSolutions.push(40);
+                    } else if (eq.values[0] === 30 && eq.values[1] === '-') {
+                        solution[`${eq.row},${eq.col+2}`] = 1;
+                        solution[`${eq.row},${eq.col+4}`] = 6;
+                        solution[`${eq.row},${eq.col+6}`] = 1;
+                        allSolutions.push(1, 6, 1);
+                    } else if (eq.values[1] === '÷' && eq.values[2] === 7) {
+                        solution[`${eq.row},${eq.col}`] = 14;
+                        solution[`${eq.row},${eq.col+4}`] = 2;
+                        allSolutions.push(14, 2);
+                    } else if (eq.values[0] === 23 && eq.values[1] === '-') {
+                        solution[`${eq.row},${eq.col+2}`] = 14;
+                        solution[`${eq.row},${eq.col+4}`] = 9;
+                        allSolutions.push(14, 9);
+                    } else if (eq.values[0] === 16 && eq.values[1] === '+') {
+                        solution[`${eq.row},${eq.col+2}`] = 21;
+                        allSolutions.push(21);
+                    } else if (eq.values[1] === '-' && eq.values[2] === 22) {
+                        solution[`${eq.row},${eq.col}`] = 23;
+                        allSolutions.push(23);
+                    }
+                } else if (eq.dir === 'v') {
+                    if (eq.values[1] === '+' && eq.values[3] === '=') {
+                        solution[`${eq.row},${eq.col}`] = 1;
+                        solution[`${eq.row+2},${eq.col}`] = 1;
+                        solution[`${eq.row+4},${eq.col}`] = 2;
+                        allSolutions.push(1, 1, 2);
+                    } else if (eq.values[1] === '-' && eq.values[3] === '=') {
+                        solution[`${eq.row},${eq.col}`] = 8;
+                        solution[`${eq.row+2},${eq.col}`] = 6;
+                        allSolutions.push(8, 6);
+                    } else if (eq.values[1] === '-' && eq.values[3] === '=' && eq.values[4] === 8) {
+                        solution[`${eq.row},${eq.col}`] = 40;
+                        solution[`${eq.row+2},${eq.col}`] = 9;
+                        allSolutions.push(40, 9);
+                    }
+                }
+            });
             
-            const choices = [9, 1, 21, 2, 40, 14, 8, 6, 23, 1, 5];
+            // Add connectors between equations
+            addConnectors(grid);
+            
+            // Generate choices
+            const choices = generateChoices(allSolutions, choiceCount, 1, 40);
             
             return { grid, solution, choices };
         }
 
-        // Generate medium level equations (like the provided example)
-        function generateMediumLevel(equationCount = 4, choiceCount = 15) {
-            // Create a grid similar to the provided medium example, replacing "?" with null
-            const grid = [
-                [null, "×", "11", "=", "33", "_", null, "+", "9", "=", "34"],
-                ["_", "_", "-", "_", "_", "_", "_", "_", "+", "_", "_"],
-                ["_", "_", null, "_", null, "-", "9", "=", null, "_", "_"],
-                ["_", "_", "=", "_", "_", "_", "_", "_", "=", "_", "_"],
-                ["110", "÷", "5", "=", null, "_", null, "+", null, "=", "18"],
-                ["_", "_", "_", "_", "+", "_", "+", "_", "_", "_", "_"],
-                ["28", "-", "11", "=", null, "_", null, "×", null, "=", "45"],
-                ["_", "_", "_", "_", "=", "_", "=", "_", "_", "_", "_"],
-                ["_", "_", "_", "_", null, "+", null, "=", "55", "_", "_"]
+        // Generate medium level equations with dynamic structure
+        function generateMediumLevel(equationCount = 6, choiceCount = 15) {
+            const grid = initializeGrid(9, 11);
+            const solution = {};
+            const allSolutions = [];
+            
+            // Define equations for medium level
+            const equations = [
+                // Horizontal equations
+                { row: 0, col: 0, dir: 'h', values: [null, '×', 11, '=', 33] },
+                { row: 0, col: 6, dir: 'h', values: [null, '+', 9, '=', 34] },
+                { row: 2, col: 2, dir: 'h', values: [null, '-', null, '-', 9, '=', null] },
+                { row: 4, col: 0, dir: 'h', values: [110, '÷', 5, '=', null] },
+                { row: 4, col: 6, dir: 'h', values: [null, '+', null, '=', 18] },
+                { row: 6, col: 0, dir: 'h', values: [28, '-', 11, '=', null] },
+                { row: 6, col: 6, dir: 'h', values: [null, '×', null, '=', 45] },
+                { row: 8, col: 4, dir: 'h', values: [null, '+', null, '=', 55] },
+                
+                // Vertical equations
+                { row: 0, col: 0, dir: 'v', values: [null, '÷', null, '=', null] },
+                { row: 0, col: 6, dir: 'v', values: [null, '+', null, '=', null] },
+                { row: 2, col: 4, dir: 'v', values: [null, '×', null, '=', null] }
             ];
             
-            const solution = {
-                "0,0": 3,
-                "2,2": 6,
-                "0,6": 25,
-                "4,4": 22,
-                "2,4": 11,
-                "2,8": 2,
-                "4,8": 11,
-                "4,6": 7,
-                "6,6": 9,
-                "6,8": 5,
-                "8,6": 16,
-                "8,4": 39,
-                "6,4": 17
-            };
+            // Place equations on grid
+            equations.forEach(eq => {
+                placeEquation(grid, eq);
+                
+                // Calculate solutions
+                if (eq.dir === 'h') {
+                    if (eq.values[1] === '×' && eq.values[2] === 11) {
+                        solution[`${eq.row},${eq.col}`] = 3;
+                        allSolutions.push(3);
+                    } else if (eq.values[1] === '+' && eq.values[2] === 9) {
+                        solution[`${eq.row},${eq.col}`] = 25;
+                        allSolutions.push(25);
+                    } else if (eq.values[1] === '-' && eq.values[3] === '-') {
+                        solution[`${eq.row},${eq.col}`] = 6;
+                        solution[`${eq.row},${eq.col+2}`] = 11;
+                        solution[`${eq.row},${eq.col+6}`] = 2;
+                        allSolutions.push(6, 11, 2);
+                    } else if (eq.values[0] === 110 && eq.values[1] === '÷') {
+                        solution[`${eq.row},${eq.col+4}`] = 22;
+                        allSolutions.push(22);
+                    } else if (eq.values[1] === '+' && eq.values[3] === '=') {
+                        solution[`${eq.row},${eq.col}`] = 7;
+                        solution[`${eq.row},${eq.col+2}`] = 11;
+                        allSolutions.push(7, 11);
+                    } else if (eq.values[0] === 28 && eq.values[1] === '-') {
+                        solution[`${eq.row},${eq.col+4}`] = 17;
+                        allSolutions.push(17);
+                    } else if (eq.values[1] === '×' && eq.values[3] === '=') {
+                        solution[`${eq.row},${eq.col}`] = 9;
+                        solution[`${eq.row},${eq.col+2}`] = 5;
+                        allSolutions.push(9, 5);
+                    } else if (eq.values[1] === '+' && eq.values[3] === '=' && eq.values[4] === 55) {
+                        solution[`${eq.row},${eq.col}`] = 39;
+                        solution[`${eq.row},${eq.col+2}`] = 16;
+                        allSolutions.push(39, 16);
+                    }
+                }
+            });
             
-            const choices = [6, 25, 16, 11, 3, 7, 5, 17, 2, 39, 9, 11, 22];
+            // Add connectors between equations
+            addConnectors(grid);
+            
+            // Generate choices
+            const choices = generateChoices(allSolutions, choiceCount, 1, 55);
             
             return { grid, solution, choices };
         }
 
-        // Generate hard level equations (like the provided example)
-        function generateHardLevel(equationCount = 6, choiceCount = 20) {
-            // Create a grid similar to the provided hard example, replacing "?" with null
-            const grid = [
-                [null, "_", null, "+", "5", "=", null, "_", "_", "_", "_"],
-                ["+", "_", "-", "_", "_", "_", "+", "_", "_", "_", "_"],
-                ["5", "-", null, "=", null, "_", null, "-", "1", "=", null],
-                ["=", "_", "=", "_", "+", "_", "=", "_", "+", "_", "-"],
-                ["8", "+", null, "=", null, "_", "39", "-", null, "=", null],
-                ["_", "_", "_", "_", "=", "_", "_", "_", "=", "_", "="],
-                ["18", "-", null, "=", "12", "_", null, "-", null, "=", null],
-                ["_", "_", "-", "_", "_", "_", "-", "_", "_", "_", "_"],
-                ["6", "+", null, "=", "11", "_", null, "-", null, "=", "18"],
-                ["_", "_", "=", "_", "_", "_", "=", "_", "_", "_", "_"],
-                ["_", "_", "1", "+", null, "=", "25", "_", "_", "_", "_"]
+        // Generate hard level equations with dynamic structure
+        function generateHardLevel(equationCount = 7, choiceCount = 20) {
+            const grid = initializeGrid(11, 11);
+            const solution = {};
+            const allSolutions = [];
+            
+            // Define equations for hard level
+            const equations = [
+                // Horizontal equations
+                { row: 0, col: 0, dir: 'h', values: [null, '+', null, '+', 5, '=', null] },
+                { row: 2, col: 0, dir: 'h', values: [5, '-', null, '=', null] },
+                { row: 2, col: 6, dir: 'h', values: [null, '-', 1, '=', null] },
+                { row: 4, col: 0, dir: 'h', values: [8, '+', null, '=', null] },
+                { row: 4, col: 6, dir: 'h', values: [39, '-', null, '=', null] },
+                { row: 6, col: 0, dir: 'h', values: [18, '-', null, '=', 12] },
+                { row: 6, col: 6, dir: 'h', values: [null, '-', null, '=', null] },
+                { row: 8, col: 0, dir: 'h', values: [6, '+', null, '=', 11] },
+                { row: 8, col: 6, dir: 'h', values: [null, '-', null, '=', 18] },
+                { row: 10, col: 2, dir: 'h', values: [1, '+', null, '=', 25] },
+                
+                // Vertical equations
+                { row: 0, col: 0, dir: 'v', values: [null, '+', 8, '=', null] },
+                { row: 0, col: 2, dir: 'v', values: [null, '-', null, '=', 1] },
+                { row: 0, col: 4, dir: 'v', values: [5, '+', null, '=', null] },
+                { row: 0, col: 6, dir: 'v', values: [null, '-', 39, '=', null] },
+                { row: 0, col: 10, dir: 'v', values: [null, '=', null, '=', null] }
             ];
             
-            const solution = {
-                "0,0": 3,
-                "10,4": 24,
-                "8,2": 5,
-                "6,2": 6,
-                "2,2": 3,
-                "2,4": 2,
-                "4,4": 10,
-                "4,2": 2,
-                "0,2": 5,
-                "0,6": 10,
-                "2,6": 29,
-                "2,10": 28,
-                "6,6": 52,
-                "8,6": 27,
-                "8,8": 9,
-                "6,8": 32,
-                "6,10": 20,
-                "4,10": 8,
-                "4,8": 31
-            };
+            // Place equations on grid
+            equations.forEach(eq => {
+                placeEquation(grid, eq);
+                
+                // Calculate solutions (simplified for example)
+                if (eq.dir === 'h') {
+                    if (eq.values[0] === 5 && eq.values[1] === '-') {
+                        solution[`${eq.row},${eq.col+2}`] = 3;
+                        solution[`${eq.row},${eq.col+4}`] = 2;
+                        allSolutions.push(3, 2);
+                    } else if (eq.values[0] === 8 && eq.values[1] === '+') {
+                        solution[`${eq.row},${eq.col+2}`] = 2;
+                        solution[`${eq.row},${eq.col+4}`] = 10;
+                        allSolutions.push(2, 10);
+                    } else if (eq.values[0] === 18 && eq.values[1] === '-') {
+                        solution[`${eq.row},${eq.col+2}`] = 6;
+                        allSolutions.push(6);
+                    } else if (eq.values[0] === 6 && eq.values[1] === '+') {
+                        solution[`${eq.row},${eq.col+2}`] = 5;
+                        allSolutions.push(5);
+                    } else if (eq.values[2] === 1 && eq.values[3] === '=') {
+                        solution[`${eq.row},${eq.col}`] = 29;
+                        solution[`${eq.row},${eq.col+4}`] = 28;
+                        allSolutions.push(29, 28);
+                    } else if (eq.values[0] === 39 && eq.values[1] === '-') {
+                        solution[`${eq.row},${eq.col+2}`] = 31;
+                        solution[`${eq.row},${eq.col+4}`] = 8;
+                        allSolutions.push(31, 8);
+                    } else if (eq.values[1] === '-' && eq.values[3] === '=' && eq.values[4] === 18) {
+                        solution[`${eq.row},${eq.col}`] = 27;
+                        solution[`${eq.row},${eq.col+2}`] = 9;
+                        allSolutions.push(27, 9);
+                    } else if (eq.values[1] === '-' && eq.values[3] === '=') {
+                        solution[`${eq.row},${eq.col}`] = 52;
+                        solution[`${eq.row},${eq.col+2}`] = 32;
+                        solution[`${eq.row},${eq.col+4}`] = 20;
+                        allSolutions.push(52, 32, 20);
+                    } else if (eq.values[0] === 1 && eq.values[1] === '+') {
+                        solution[`${eq.row},${eq.col+2}`] = 24;
+                        allSolutions.push(24);
+                    } else if (eq.values[2] === 5 && eq.values[3] === '=') {
+                        solution[`${eq.row},${eq.col}`] = 3;
+                        solution[`${eq.row},${eq.col+2}`] = 5;
+                        solution[`${eq.row},${eq.col+6}`] = 10;
+                        allSolutions.push(3, 5, 10);
+                    }
+                }
+            });
             
-            const choices = [5, 2, 8, 2, 29, 31, 6, 24, 27, 3, 10, 32, 10, 3, 20, 52, 5, 9, 28];
+            // Add connectors between equations
+            addConnectors(grid);
+            
+            // Generate choices
+            const choices = generateChoices(allSolutions, choiceCount, 1, 60);
             
             return { grid, solution, choices };
         }
-         // Generate expert level equations
-function generateExpertLevel(equationCount = 8, choiceCount = 25) {
-    const grid = [];
-    const solution = {};
-    const requiredAnswers = [];
-    const visibleNumbers = [];
 
-    for (let row = 0; row < equationCount; row++) {
-        const equationType = Math.floor(Math.random() * 5); // 5 types for expert
-        let equation, solutionValue, blankPos;
-
-        switch (equationType) {
-            case 0: // a + b * c - d = e
-                const a1 = Math.floor(Math.random() * 20) + 10; // 10-29
-                const b1 = Math.floor(Math.random() * 10) + 5;  // 5-14
-                const c1 = Math.floor(Math.random() * 5) + 2;   // 2-6
-                const d1 = Math.floor(Math.random() * 10) + 5;  // 5-14
-                const result1 = a1 + b1 * c1 - d1;
-                blankPos = getRandomBlankPosition([0,2,4,6,8]);
-                equation = buildMultiOpEquation(a1, '+', b1, '×', c1, '-', d1, '=', result1, blankPos);
-                solutionValue = calculateMultiOpMissingValue(a1, b1, c1, d1, result1, ['+', '×', '-'], blankPos);
-                break;
-
-            case 1: // (a * b) / c + d = e
-                const a2 = Math.floor(Math.random() * 15) + 5;  // 5-19
-                const b2 = Math.floor(Math.random() * 10) + 3;  // 3-12
-                const c2 = Math.floor(Math.random() * 4) + 2;   // 2-5
-                const d2 = Math.floor(Math.random() * 20) + 5;  // 5-24
-                const result2 = Math.floor((a2 * b2) / c2) + d2;
-                blankPos = getRandomBlankPosition([0,2,4,6,8]);
-                equation = buildMultiOpEquation(a2, '×', b2, '÷', c2, '+', d2, '=', result2, blankPos);
-                solutionValue = calculateMultiOpMissingValue(a2, b2, c2, d2, result2, ['×','÷','+'], blankPos);
-                break;
-
-            case 2: // a - (b + c) * d = e
-                const a3 = Math.floor(Math.random() * 30) + 20; // 20-49
-                const b3 = Math.floor(Math.random() * 10) + 5;  // 5-14
-                const c3 = Math.floor(Math.random() * 10) + 1;  // 1-10
-                const d3 = Math.floor(Math.random() * 4) + 2;   // 2-5
-                const result3 = a3 - (b3 + c3) * d3;
-                blankPos = getRandomBlankPosition([0,2,4,6,8]);
-                equation = buildMultiOpEquation(a3, '-', b3, '+', c3, '×', d3, '=', result3, blankPos);
-                solutionValue = calculateMultiOpMissingValue(a3, b3, c3, d3, result3, ['-','+','×'], blankPos);
-                break;
-
-            case 3: // a / b + c * d - e = f
-                const b4 = Math.floor(Math.random() * 5) + 2;   // 2-6
-                const c4 = Math.floor(Math.random() * 8) + 3;   // 3-10
-                const d4 = Math.floor(Math.random() * 6) + 2;   // 2-7
-                const e4 = Math.floor(Math.random() * 10) + 5;  // 5-14
-                const a4 = b4 * Math.floor(Math.random() * 10 + 2); // ensure divisible
-                const result4 = Math.floor(a4 / b4) + c4 * d4 - e4;
-                blankPos = getRandomBlankPosition([0,2,4,6,8,10]);
-                equation = buildMultiOpEquation(a4, '÷', b4, '+', c4, '×', d4, '-', e4, '=', result4, blankPos);
-                solutionValue = calculateMultiOpMissingValue(a4, b4, c4, d4, e4, result4, ['÷','+','×','-'], blankPos);
-                break;
-
-            case 4: // Complex mix: (a + b) * c / d - e = f
-                const a5 = Math.floor(Math.random() * 20) + 5;  // 5-24
-                const b5 = Math.floor(Math.random() * 15) + 3;  // 3-17
-                const c5 = Math.floor(Math.random() * 6) + 2;   // 2-7
-                const d5 = Math.floor(Math.random() * 5) + 2;   // 2-6
-                const e5 = Math.floor(Math.random() * 10) + 1;  // 1-10
-                const result5 = Math.floor((a5 + b5) * c5 / d5) - e5;
-                blankPos = getRandomBlankPosition([0,2,4,6,8,10]);
-                equation = buildMultiOpEquation(a5, '+', b5, '×', c5, '÷', d5, '-', e5, '=', result5, blankPos);
-                solutionValue = calculateMultiOpMissingValue(a5, b5, c5, d5, e5, result5, ['+','×','÷','-'], blankPos);
-                break;
-        }
-
-        solution[`${row},${blankPos}`] = solutionValue;
-        requiredAnswers.push(solutionValue);
-
-        equation.forEach(cell => {
-            if (typeof cell === 'number') visibleNumbers.push(cell);
-        });
-
-        grid.push(equation);
-    }
-
-    const choices = generateChoices(requiredAnswers, visibleNumbers, choiceCount, 5, 200);
-
-    return { grid, solution, choices };
-}
-
-
-        // Generate expert level equations (like the provided example)
+        // Generate expert level equations with dynamic structure
         function generateExpertLevel(equationCount = 8, choiceCount = 24) {
-            // Create a grid similar to the provided expert example, replacing "?" with null
-            const grid = [
-                [null, "_", "22", "_", "_", "_", null, "+", "4", "=", null, "_", "_"],
-                ["×", "_", "-", "_", "_", "_", "+", "_", "+", "_", "×", "_", "_"],
-                [null, "+", null, "=", null, "_", null, "-", null, "=", null, "_", "_"],
-                ["=", "_", "=", "_", "+", "_", "=", "_", "=", "_", "=", "_", "_"],
-                ["72", "_", null, "+", null, "=", "29", "_", null, "+", "78", "=", null],
-                ["_", "_", "_", "_", "=", "_", "_", "_", "_", "_", "_", "_", "_"],
-                ["_", "_", null, "×", null, "=", "54", "_", "_", "_", null, "_", "_"],
-                ["_", "_", "-", "_", "_", "_", "+", "_", "_", "_", "+", "_", "_"],
-                ["_", "_", "1", "_", "74", "_", null, "+", "25", "=", "36", "_", "_"],
-                ["_", "_", "=", "_", "-", "_", "=", "_", "-", "_", "=", "_", "_"],
-                ["_", "_", null, "_", null, "-", null, "=", null, "_", "47", "_", "_"],
-                ["_", "_", "_", "_", "=", "_", "_", "_", "=", "_", "_", "_", "_"],
-                ["_", "_", "_", "_", null, "+", "16", "=", "23", "_", "_", "_", "_"]
+            const grid = initializeGrid(13, 13);
+            const solution = {};
+            const allSolutions = [];
+            
+            // Define equations for expert level
+            const equations = [
+                // Horizontal equations
+                { row: 0, col: 0, dir: 'h', values: [null, '×', 22, '=', null] },
+                { row: 0, col: 6, dir: 'h', values: [null, '+', 4, '=', null] },
+                { row: 2, col: 0, dir: 'h', values: [null, '+', null, '=', null] },
+                { row: 2, col: 6, dir: 'h', values: [null, '-', null, '=', null] },
+                { row: 4, col: 0, dir: 'h', values: [72, '-', null, '+', null, '=', 29] },
+                { row: 4, col: 8, dir: 'h', values: [null, '+', 78, '=', null] },
+                { row: 6, col: 2, dir: 'h', values: [null, '×', null, '=', 54] },
+                { row: 8, col: 6, dir: 'h', values: [null, '+', 25, '=', 36] },
+                { row: 10, col: 2, dir: 'h', values: [null, '-', null, '=', null] },
+                { row: 10, col: 10, dir: 'h', values: [47, '=', null] },
+                { row: 12, col: 4, dir: 'h', values: [null, '+', 16, '=', 23] },
+                
+                // Vertical equations
+                { row: 0, col: 0, dir: 'v', values: [null, '=', null, '=', 72] },
+                { row: 0, col: 2, dir: 'v', values: [22, '=', null, '=', null] },
+                { row: 0, col: 6, dir: 'v', values: [null, '=', null, '=', null] },
+                { row: 0, col: 10, dir: 'v', values: [null, '=', 78, '=', 47] },
+                { row: 2, col: 4, dir: 'v', values: [null, '=', null, '=', null] },
+                { row: 4, col: 8, dir: 'v', values: [null, '=', 25, '=', null] },
+                { row: 6, col: 10, dir: 'v', values: [null, '=', null, '=', null] }
             ];
             
-            const solution = {
-                "0,0": 4,
-                "2,0": 18,
-                "6,2": 27,
-                "6,4": 2,
-                "10,2": 26,
-                "12,4": 7,
-                "10,4": 67,
-                "10,6": 65,
-                "8,6": 11,
-                "10,8": 2,
-                "2,2": 11,
-                "4,2": 11,
-                "4,4": 18,
-                "2,4": 29,
-                "6,10": 11,
-                "4,12": 86,
-                "4,8": 8,
-                "2,8": 4,
-                "0,10": 26,
-                "2,10": 3,
-                "0,6": 22,
-                "2,6": 7
-            };
+            // Place equations on grid
+            equations.forEach(eq => {
+                placeEquation(grid, eq);
+                
+                // Calculate solutions (simplified for example)
+                if (eq.dir === 'h') {
+                    if (eq.values[1] === '×' && eq.values[2] === 22) {
+                        solution[`${eq.row},${eq.col}`] = 4;
+                        solution[`${eq.row},${eq.col+4}`] = 88;
+                        allSolutions.push(4, 88);
+                    } else if (eq.values[1] === '+' && eq.values[2] === 4) {
+                        solution[`${eq.row},${eq.col}`] = 22;
+                        solution[`${eq.row},${eq.col+4}`] = 26;
+                        allSolutions.push(22, 26);
+                    } else if (eq.values[0] === 72 && eq.values[1] === '-') {
+                        solution[`${eq.row},${eq.col+2}`] = 11;
+                        solution[`${eq.row},${eq.col+4}`] = 18;
+                        allSolutions.push(11, 18);
+                    } else if (eq.values[1] === '+' && eq.values[2] === 78) {
+                        solution[`${eq.row},${eq.col}`] = 8;
+                        solution[`${eq.row},${eq.col+4}`] = 86;
+                        allSolutions.push(8, 86);
+                    } else if (eq.values[1] === '×' && eq.values[3] === '=') {
+                        solution[`${eq.row},${eq.col}`] = 27;
+                        solution[`${eq.row},${eq.col+2}`] = 2;
+                        allSolutions.push(27, 2);
+                    } else if (eq.values[1] === '+' && eq.values[2] === 25) {
+                        solution[`${eq.row},${eq.col}`] = 11;
+                        allSolutions.push(11);
+                    } else if (eq.values[1] === '-' && eq.values[3] === '=') {
+                        solution[`${eq.row},${eq.col}`] = 26;
+                        solution[`${eq.row},${eq.col+2}`] = 67;
+                        solution[`${eq.row},${eq.col+4}`] = 65;
+                        solution[`${eq.row},${eq.col+6}`] = 2;
+                        allSolutions.push(26, 67, 65, 2);
+                    } else if (eq.values[1] === '+' && eq.values[2] === 16) {
+                        solution[`${eq.row},${eq.col}`] = 7;
+                        allSolutions.push(7);
+                    } else if (eq.values[0] === null && eq.values[1] === '+') {
+                        solution[`${eq.row},${eq.col}`] = 18;
+                        solution[`${eq.row},${eq.col+2}`] = 11;
+                        solution[`${eq.row},${eq.col+4}`] = 29;
+                        allSolutions.push(18, 11, 29);
+                    } else if (eq.values[0] === null && eq.values[1] === '-') {
+                        solution[`${eq.row},${eq.col}`] = 7;
+                        solution[`${eq.row},${eq.col+2}`] = 4;
+                        solution[`${eq.row},${eq.col+4}`] = 3;
+                        allSolutions.push(7, 4, 3);
+                    }
+                }
+            });
             
-            const choices = [3, 12, 65, 8, 2, 7, 1, 26, 4, 67, 14, 7, 8, 11, 4, 27, 11, 22, 18, 15, 86, 2, 11, 11];
+            // Add connectors between equations
+            addConnectors(grid);
+            
+            // Generate choices
+            const choices = generateChoices(allSolutions, choiceCount, 1, 100);
             
             return { grid, solution, choices };
+        }
+
+        // Helper function to initialize an empty grid
+        function initializeGrid(rows, cols) {
+            const grid = [];
+            for (let i = 0; i < rows; i++) {
+                const row = [];
+                for (let j = 0; j < cols; j++) {
+                    row.push('_');
+                }
+                grid.push(row);
+            }
+            return grid;
+        }
+
+        // Helper function to place an equation on the grid
+        function placeEquation(grid, equation) {
+            const { row, col, dir, values } = equation;
+            
+            for (let i = 0; i < values.length; i++) {
+                if (dir === 'h') {
+                    if (values[i] !== null) {
+                        grid[row][col + i] = values[i].toString();
+                    } else {
+                        grid[row][col + i] = null;
+                    }
+                } else if (dir === 'v') {
+                    if (values[i] !== null) {
+                        grid[row + i][col] = values[i].toString();
+                    } else {
+                        grid[row + i][col] = null;
+                    }
+                }
+            }
+        }
+
+        // Helper function to add connectors between equations
+        function addConnectors(grid) {
+            // Add basic connectors (simplified for example)
+            for (let i = 0; i < grid.length; i++) {
+                for (let j = 0; j < grid[i].length; j++) {
+                    // Skip if cell already has content
+                    if (grid[i][j] !== '_') continue;
+                    
+                    // Check if this cell should be a connector
+                    const hasLeft = j > 0 && grid[i][j-1] !== '_';
+                    const hasRight = j < grid[i].length-1 && grid[i][j+1] !== '_';
+                    const hasTop = i > 0 && grid[i-1][j] !== '_';
+                    const hasBottom = i < grid.length-1 && grid[i+1][j] !== '_';
+                    
+                    // Add connector if it connects two equation parts
+                    if ((hasLeft && hasRight) || (hasTop && hasBottom)) {
+                        grid[i][j] = '_';
+                    } else if ((hasLeft && hasTop) || (hasRight && hasTop) || 
+                               (hasLeft && hasBottom) || (hasRight && hasBottom)) {
+                        grid[i][j] = '_';
+                    }
+                }
+            }
+        }
+
+        // Helper function to generate choices
+        function generateChoices(solutions, count, min, max) {
+            const choices = [...new Set(solutions)]; // Remove duplicates
+            
+            // Add some random numbers to fill out the choices
+            while (choices.length < count) {
+                const randomNum = Math.floor(Math.random() * (max - min + 1)) + min;
+                if (!choices.includes(randomNum)) {
+                    choices.push(randomNum);
+                }
+            }
+            
+            // Shuffle the choices
+            for (let i = choices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [choices[i], choices[j]] = [choices[j], choices[i]];
+            }
+            
+            return choices.slice(0, count);
         }
 
         // Render the grid
@@ -1282,7 +1446,8 @@ function generateExpertLevel(equationCount = 8, choiceCount = 25) {
             }
         }
     </script>
-    
+
+
    {% endblock extra_scripts  %}
    <div class="form-buttons" style="display:flex; justify-content:flex-end; gap: 10px; margin:20px;">
     <a href="templates/dashboard" class="cancel-btn"> Cancel</a>

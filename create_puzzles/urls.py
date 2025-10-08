@@ -3,14 +3,14 @@ from . import views,level_views
 app_name = 'create_puzzles'
 
 urlpatterns = [
-    path('', views.item_list, name='item-list'),
-    path('create/', views.item_create, name='item-create'),
-    path('update/<int:pk>/', views.item_update, name='item-update'),
-    path('delete/<int:pk>/', views.item_delete, name='item-delete'),
-    path('confirm_delete/<int:pk>/', views.item_confirm_delete, name='item-confirm-delete'),
+    path('', views.puzzle_list, name='item-list'),
+    path('create/', views.puzzle_create, name='item-create'),
+    path('update/<int:pk>/', views.puzzle_update, name='item-update'),
+    path('delete/<int:pk>/', views.puzzle_delete, name='item-delete'),
+    path('confirm_delete/<int:pk>/', views.puzzle_confirm_delete, name='item-confirm-delete'),
    
    
-    path('leveltable/',views.level_item_list,name='level-item-list'),
+    path('puzzleLevelTable/',views.puzzle_level_list,name='level-item-list'),
     
     path('leveles/',level_views.levels_list,name='levels-list'),
     

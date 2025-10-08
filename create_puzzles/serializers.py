@@ -1,16 +1,16 @@
 from rest_framework import serializers
-from .models import Item, Difficulty,puzzleLevel
+from .models import crossMath, Difficulty,puzzleLevel
 
-class ItemSerializer(serializers.ModelSerializer):
+class puzzleSerializer(serializers.ModelSerializer):
     # Show difficulty text in API response
     difficulty_name = serializers.CharField(source='difficulty.name', read_only=True)
     # Accept numeric value (1,2,3) from API requests
     difficulty = serializers.IntegerField(write_only=True)
 
     class Meta:
-        model = Item
+        model = crossMath
         fields = [
-            'id', 'name', 'title', 'author', 'difficulty', 'difficulty_name',
+            'id', 'title','description',  'difficulty', 'difficulty_name',
             'row', 'column', 'grid', 'solution', 'choices',
             'created_at', 'updated_at', 'created_by', 'updated_by', 'active'
         ]
@@ -29,12 +29,12 @@ class ItemSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
-class LimitedItemSerializer(serializers.ModelSerializer):
+class puzzleLevelSerializer(serializers.ModelSerializer):
     # Only show numeric difficulty
     difficulty = serializers.CharField(source='difficulty.name', read_only=True)
 
     class Meta:
-        model = Item
+        model = crossMath
         fields = ['id', 'difficulty', 'created_by', 'updated_by', 'active']
         
         

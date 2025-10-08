@@ -2,16 +2,16 @@ from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 class Difficulty(models.Model):
-    name = models.CharField(max_length=50, unique=True)  # Easy, Medium, Hard
-    value = models.PositiveSmallIntegerField(unique=True)  # 1, 2, 3
+    name = models.CharField(max_length=50, unique=True)  # Easy, Medium, Hard,Expert
+    value = models.PositiveSmallIntegerField(unique=True)  # 1, 2, 3,4
 
     def __str__(self):
         return self.name
 
-class Item(models.Model):
-    name = models.CharField(max_length=100)
+class crossMath(models.Model):
     title = models.CharField(max_length=100)
-    author = models.CharField(max_length=100, null=True, blank=True, default='Admin')
+    description= models.CharField(max_length=100)
+    
     
     # Store numeric value in DB, join to Difficulty
     difficulty = models.ForeignKey(

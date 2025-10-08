@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.utils import timezone
-from .models import Item, Difficulty, puzzleLevel
+from .models import crossMath, Difficulty, puzzleLevel
 
 
 
@@ -20,7 +20,7 @@ def item_create(request):
         difficulty_value = int(request.POST.get('difficulty'))
         difficulty_obj = get_object_or_404(Difficulty, value=difficulty_value)
 
-        item = Item(
+        item = crossMath(
             difficulty=difficulty_obj,
             created_at=timezone.now(),
             updated_at=timezone.now(),
@@ -41,7 +41,7 @@ def item_create(request):
     # Update item
 
 def item_update(request, pk):
-    item = get_object_or_404(Item, pk=pk)
+    item = get_object_or_404(crossMath, pk=pk)
     difficulties = Difficulty.objects.all()  # Dynamic difficulty options
 
     if request.method == 'POST':
@@ -65,14 +65,14 @@ def item_update(request, pk):
     # Confirm delete page
 
 def item_confirm_delete(request, pk):
-    item = get_object_or_404(Item, pk=pk)
+    item = get_object_or_404(crossMath, pk=pk)
     return render(request, 'create_puzzles/item_confirm_delete.html', {'item': item})
 
 
 # Delete item
 
 def item_delete(request, pk):
-    item = get_object_or_404(Item, pk=pk)
+    item = get_object_or_404(crossMath, pk=pk)
     item.delete()
     messages.success(request, "Item deleted successfully.")
     return redirect('create_puzzles:levels-list')

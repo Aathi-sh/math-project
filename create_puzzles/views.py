@@ -1,20 +1,20 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.utils import timezone
-from .models import Item, Difficulty
+from .models import crossMath, Difficulty
 
 
 # List all items (full table)
 
-def item_list(request):
-    items = Item.objects.all()
+def puzzle_list(request):
+    items = crossMath.objects.all()
     return render(request, 'pages/tables/data.html', {'items': items})
 
 
 # Level table view (only numeric difficulty)
 
-def level_item_list(request):
-    items = Item.objects.only(
+def puzzle_level_list(request):
+    items = crossMath.objects.only(
         'id', 'difficulty_id', 'created_at', 'updated_at', 'created_by', 'updated_by', 'active'
     )
     return render(request, 'pages/tables/leveltable.html', {'items': items})
@@ -22,16 +22,15 @@ def level_item_list(request):
 
 # Create item
 
-def item_create(request):
+def puzzle_create(request):
     difficulties = Difficulty.objects.all()  # Dynamic difficulty options
     if request.method == 'POST':
         difficulty_value = int(request.POST.get('difficulty'))
         difficulty_obj = get_object_or_404(Difficulty, value=difficulty_value)
 
-        item = Item(
-            name=request.POST.get('name'),
-            title=request.POST.get('title'),
-            author=request.POST.get('author') or 'Admin',
+        item = crossMath(
+            title=request.POST.get('name'),
+            description=request.POST.get('title'),
             difficulty=difficulty_obj,
             row=int(request.POST.get('row') or 0),
             column=int(request.POST.get('column') or 0),
@@ -56,17 +55,16 @@ def item_create(request):
 
 # Update item
 
-def item_update(request, pk):
-    item = get_object_or_404(Item, pk=pk)
+def puzzle_update(request, pk):
+    item = get_object_or_404(crossMath, pk=pk)
     difficulties = Difficulty.objects.all()  # Dynamic difficulty options
 
     if request.method == 'POST':
         difficulty_value = int(request.POST.get('difficulty'))
         difficulty_obj = get_object_or_404(Difficulty, value=difficulty_value)
 
-        item.name = request.POST.get('name')
-        item.title = request.POST.get('title')
-        item.author = request.POST.get('author') or 'Admin'
+        item.title = request.POST.get('name')
+        item.description = request.POST.get('title')
         item.difficulty = difficulty_obj
         item.row = int(request.POST.get('row') or 0)
         item.column = int(request.POST.get('column') or 0)
@@ -88,15 +86,15 @@ def item_update(request, pk):
 
 # Confirm delete page
 
-def item_confirm_delete(request, pk):
-    item = get_object_or_404(Item, pk=pk)
+def puzzle_confirm_delete(request, pk):
+    item = get_object_or_404(crossMath, pk=pk)
     return render(request, 'create_puzzles/item_confirm_delete.html', {'item': item})
 
 
 # Delete item
 
-def item_delete(request, pk):
-    item = get_object_or_404(Item, pk=pk)
+def puzzle_delete(request, pk):
+    item = get_object_or_404(crossMath, pk=pk)
     item.delete()
     messages.success(request, "Item deleted successfully.")
     return redirect('create_puzzles:item-list')

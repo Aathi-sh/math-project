@@ -23,7 +23,7 @@ urlpatterns = [
     path('charts/', include('apps.charts.urls')),
     path("admin/", admin.site.urls),
     path("", include('admin_adminlte.urls')),
-    path('myapi/',include('create_puzzles.api_urls')),
+    path('PuzzlesApi/',include('create_puzzles.api_urls')),
     path('puzzles/',include('create_puzzles.urls')),
     
 ]

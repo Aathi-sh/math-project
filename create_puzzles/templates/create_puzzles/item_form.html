@@ -468,461 +468,508 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Global variables
-        let gridData = [];
-        let solutionData = {};
-        let choices = [];
-        let selectedCell = null;
-        let cellEditorModal = null;
-        let solutionModal = null;
-        let selectedValues = []; // For multi-selection
+       // --------------------- Full updated script (replace your old JS with this) ---------------------
+// Global variables
+let gridData = [];
+let solutionData = {};
+let choices = [];
+let selectedCell = null;
+let cellEditorModal = null;
+let solutionModal = null;
+let selectedValues = []; // For multi-selection
 
-        // Initialize the page
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize modals
-            cellEditorModal = new bootstrap.Modal(document.getElementById('cellEditorModal'));
-            solutionModal = new bootstrap.Modal(document.getElementById('solutionModal'));
-            
-            // Generate initial grid
-            // generateManualGrid();
-            
-            // Set up event listeners
-            setupEventListeners();
-            
-            // Show/hide automated controls based on type
-            document.getElementById('type').addEventListener('change', function() {
-                const automatedControls = document.getElementById('automatedControls');
-                automatedControls.style.display = this.value === 'automated' ? 'block' : 'none';
-            });
-            
-            // Trigger change event to set initial state
-            document.getElementById('type').dispatchEvent(new Event('change'));
+// Initialize the page
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize modals
+    cellEditorModal = new bootstrap.Modal(document.getElementById('cellEditorModal'));
+    solutionModal = new bootstrap.Modal(document.getElementById('solutionModal'));
+    
+    // Generate initial grid
+    // generateManualGrid();
+    
+    // Set up event listeners
+    setupEventListeners();
+    
+    // Show/hide automated controls based on type
+    document.getElementById('type').addEventListener('change', function() {
+        const automatedControls = document.getElementById('automatedControls');
+        automatedControls.style.display = this.value === 'automated' ? 'block' : 'none';
+    });
+    
+    // Trigger change event to set initial state
+    document.getElementById('type').dispatchEvent(new Event('change'));
+});
+
+// Set up event listeners
+function setupEventListeners() {
+    document.getElementById('generateGrid').addEventListener('click', generateGrid);
+    document.getElementById('generateAutomated').addEventListener('click', generateAutomatedGrid);
+    document.getElementById('setSolutionBtn').addEventListener('click', setSolution);
+    document.getElementById('validateGrid').addEventListener('click', validateGrid);
+    document.getElementById('exportJson').addEventListener('click', exportJson);
+    document.getElementById('resetGrid').addEventListener('click', resetGrid);
+
+    document.getElementById('addChoiceBtn').addEventListener('click', function(event){
+        event.preventDefault();
+        addChoice();
+        return false;
+    });
+    
+    // Input option event listeners for multi-selection
+    document.querySelectorAll('.input-option.number').forEach(option => {
+        option.addEventListener('click', function() {
+            const value = this.getAttribute('data-value');
+            this.classList.add('selected');
+            selectedValues.push(value);
+            updateSelectedValuesDisplay();
         });
-
-        // Set up event listeners
-        function setupEventListeners() {
-            document.getElementById('generateGrid').addEventListener('click', generateGrid);
-            document.getElementById('generateAutomated').addEventListener('click', generateAutomatedGrid);
-            document.getElementById('setSolutionBtn').addEventListener('click', setSolution);
-            document.getElementById('validateGrid').addEventListener('click', validateGrid);
-            document.getElementById('exportJson').addEventListener('click', exportJson);
-            document.getElementById('resetGrid').addEventListener('click', resetGrid);
-
-            document.getElementById('addChoiceBtn').addEventListener('click', function(event){
-                event.preventDefault();
-                addChoice();
-                return false;
-            });
+    });
+    
+    // Toggle selection for operators
+    document.querySelectorAll('.input-option.operator').forEach(option => {
+        option.addEventListener('click', function() {
+            const value = this.getAttribute('data-value');
             
-            // Input option event listeners for multi-selection
-            document.querySelectorAll('.input-option.number').forEach(option => {
-                option.addEventListener('click', function() {
-                    const value = this.getAttribute('data-value');
-                    this.classList.add('selected');
-                    selectedValues.push(value);
-                    updateSelectedValuesDisplay();
-                });
-            });
-            
-            // Toggle selection for operators
-            document.querySelectorAll('.input-option.operator').forEach(option => {
-                option.addEventListener('click', function() {
-                    const value = this.getAttribute('data-value');
-                    
-                    if (this.classList.contains('selected')) {
-                        this.classList.remove('selected');
-                        selectedValues = selectedValues.filter(v => v !== value);
-                    } else {
-                        // Clear other operators first
-                        document.querySelectorAll('.input-option.operator').forEach(opt => {
-                            opt.classList.remove('selected');
-                        });
-                        // Clear special values
-                        document.querySelectorAll('.input-option.special').forEach(opt => {
-                            opt.classList.remove('selected');
-                        });
-                        
-                        this.classList.add('selected');
-                        selectedValues = [value];
-                    }
-                    
-                    updateSelectedValuesDisplay();
-                });
-            });
-            
-            // Toggle selection for special values
-            document.querySelectorAll('.input-option.special').forEach(option => {
-                option.addEventListener('click', function() {
-                    const value = this.getAttribute('data-value');
-                    
-                    if (this.classList.contains('selected')) {
-                        this.classList.remove('selected');
-                        selectedValues = selectedValues.filter(v => v !== value);
-                    } else {
-                        // Clear other special values first
-                        document.querySelectorAll('.input-option.special').forEach(opt => {
-                            opt.classList.remove('selected');
-                        });
-                        // Clear operators
-                        document.querySelectorAll('.input-option.operator').forEach(opt => {
-                            opt.classList.remove('selected');
-                        });
-                        
-                        this.classList.add('selected');
-                        
-                        if (value === 'clear') {
-                            // Clear all selections
-                            document.querySelectorAll('.input-option').forEach(opt => {
-                                opt.classList.remove('selected');
-                            });
-                            selectedValues = [];
-                        } else {
-                            selectedValues = [value];
-                        }
-                    }
-                    
-                    updateSelectedValuesDisplay();
-                });
-            });
-            
-            // Apply cell value
-            document.getElementById('applyCellValue').addEventListener('click', applyCellValue);
-            
-            // Save solution
-            document.getElementById('saveSolutionBtn').addEventListener('click', saveSolution);
-            document.getElementById('solutionValue').addEventListener('keypress', function(event) {
-                if (event.key === 'Enter') {
-                    event.preventDefault();
-                    saveSolution();
-                }
-            });
-            
-            // Add custom number
-            document.getElementById('addCustomNumber').addEventListener('click', function() {
-                const customInput = document.getElementById('customNumberInput');
-                const value = customInput.value.trim();
-                
-                if (value) {
-                    if (!selectedValues.includes(value)) {
-                        selectedValues.push(value);
-                        updateSelectedValuesDisplay();
-                        customInput.value = '';
-                    }
-                }
-            });
-            
-            // Allow pressing Enter to add choices
-            document.getElementById('newChoiceInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    addChoice();
-                    return false;
-                }
-            });
-        }
-
-        // Update the selected values display
-        function updateSelectedValuesDisplay() {
-            const displayElement = document.getElementById('selectedValuesDisplay');
-            if (selectedValues.length > 0) {
-                displayElement.textContent = selectedValues.join('');
+            if (this.classList.contains('selected')) {
+                this.classList.remove('selected');
+                selectedValues = selectedValues.filter(v => v !== value);
             } else {
-                displayElement.textContent = 'None';
+                // Clear other operators first
+                document.querySelectorAll('.input-option.operator').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                // Clear special values
+                document.querySelectorAll('.input-option.special').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                
+                this.classList.add('selected');
+                selectedValues = [value];
             }
-        }
-
-        // Generate grid based on user input
-        function generateGrid() {
-            const type = document.getElementById('type').value;
             
-            if (type === 'manual') {
-                generateManualGrid();
+            updateSelectedValuesDisplay();
+        });
+    });
+    
+    // Toggle selection for special values
+    document.querySelectorAll('.input-option.special').forEach(option => {
+        option.addEventListener('click', function() {
+            const value = this.getAttribute('data-value');
+            
+            if (this.classList.contains('selected')) {
+                this.classList.remove('selected');
+                selectedValues = selectedValues.filter(v => v !== value);
             } else {
-                // Automated grid will be generated via separate button
-                alert('Use the "Generate Automated Grid" button for automated generation.');
-            }
-        }
-
-        // Generate manual grid
-        function generateManualGrid() {
-            const rows = parseInt(document.getElementById('rowsInput').value);
-            const cols = parseInt(document.getElementById('colsInput').value);
-            
-            if (isNaN(rows) || isNaN(cols) || rows < 1 || cols < 1) {
-                alert('Please enter valid row and column numbers.');
-                return;
-            }
-            
-            // Initialize grid data
-            gridData = [];
-            for (let i = 0; i < rows; i++) {
-                const row = [];
-                for (let j = 0; j < cols; j++) {
-                    row.push('_'); // Start with all empty cells
-                }
-                gridData.push(row);
-            }
-            
-            // Reset solution and choices
-            solutionData = {};
-            choices = [];
-            
-            // Render grid and choices
-            renderGrid();
-            renderChoices();
-            
-            // Update JSON output
-            updateJsonOutput();
-        }
-
-        // Generate automated grid based on difficulty
-        function generateAutomatedGrid() {
-            const difficulty = document.getElementById('difficulty').value;
-            const equationCount = parseInt(document.getElementById('equationCount').value) || 4;
-            const choiceCount = parseInt(document.getElementById('choiceCount').value) || 12;
-            //
-            
-            
-            if (!difficulty) {
-                alert('Please select a difficulty level.');
-                return;
-            }
-            
-            // Generate grid based on difficulty
-            let generatedData;
-            switch (difficulty) {
-                case '1': // Easy
-                    generatedData = generateEasyLevel(equationCount, choiceCount);
-                    break;
-                case '2': // Medium
-                    generatedData = generateMediumLevel(equationCount, choiceCount);
-                    break;
-                case '3': // Hard
-                    generatedData = generateHardLevel(equationCount, choiceCount);
-                    break;
-                default:
-                    generatedData = generateEasyLevel(equationCount, choiceCount);
-            }
-            
-            // Update grid data, solution, and choices
-            gridData = generatedData.grid;
-            solutionData = generatedData.solution;
-            choices = generatedData.choices;
-            
-            // Update row and column inputs
-            document.getElementById('rowsInput').value = gridData.length;
-            document.getElementById('colsInput').value = gridData[0] ? gridData[0].length : 0;
-            
-            // Render grid and choices
-            renderGrid();
-            renderChoices();
-            
-            // Update JSON output
-            updateJsonOutput();
-            
-            alert('Automated grid generated successfully!');
-        }
-
-        // Generate easy level equations
-        function generateEasyLevel(equationCount = 4, choiceCount = 12) {
-            const grid = [];
-            const solution = {};
-            const requiredAnswers = [];
-            const visibleNumbers = [];
-            
-            for (let row = 0; row < equationCount; row++) {
-                const a = Math.floor(Math.random() * 4) + 1; // 1-4
-                const b = Math.floor(Math.random() * 4) + 1; // 1-4
-                const op = Math.random() > 0.5 ? '+' : '-';
-                const result = op === '+' ? a + b : a - b;
-                
-                // Only allow blanks on numbers (positions 0, 2, or 4)
-                const blankPositions = [0, 2, 4];
-                const blankPos = blankPositions[Math.floor(Math.random() * blankPositions.length)];
-                
-                const equation = new Array(5).fill('');
-                equation[0] = blankPos === 0 ? null : a;
-                equation[1] = op;
-                equation[2] = blankPos === 2 ? null : b;
-                equation[3] = '=';
-                equation[4] = blankPos === 4 ? null : result;
-                
-                // Calculate and store the solution
-                let solutionValue;
-                switch (blankPos) {
-                    case 0:
-                        solutionValue = op === '+' ? result - b : result + b;
-                        break;
-                    case 2:
-                        solutionValue = op === '+' ? result - a : a - result;
-                        break;
-                    case 4:
-                        solutionValue = op === '+' ? a + b : a - b;
-                        break;
-                    default:
-                        solutionValue = 0;
-                }
-                
-                if (solutionValue < 1) {
-                    row--; // Skip invalid equations
-                    continue;
-                }
-                
-                solution[`${row},${blankPos}`] = solutionValue;
-                requiredAnswers.push(solutionValue);
-                
-                // Track visible numbers
-                equation.forEach(cell => {
-                    if (typeof cell === 'number') visibleNumbers.push(cell);
+                // Clear other special values first
+                document.querySelectorAll('.input-option.special').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                // Clear operators
+                document.querySelectorAll('.input-option.operator').forEach(opt => {
+                    opt.classList.remove('selected');
                 });
                 
-                grid.push(equation);
-            }
-            
-            // Ensure we have the required number of equations
-            while (grid.length < equationCount) {
-                grid.push([2, '+', 3, '=', 5]); // Fallback equation
-                solution[`${grid.length-1},0`] = 2;
-                requiredAnswers.push(2);
-            }
-            
-            const choices = generateChoices(requiredAnswers, visibleNumbers, choiceCount, 1, 10);
-            
-            return { grid, solution, choices };
-        }
-
-        // Generate medium level equations
-        function generateMediumLevel(equationCount = 4, choiceCount = 15) {
-            const grid = [];
-            const solution = {};
-            const requiredAnswers = [];
-            const visibleNumbers = [];
-            
-            for (let row = 0; row < equationCount; row++) {
-                const equationType = Math.floor(Math.random() * 4);
-                let equation, solutionValue, blankPos;
+                this.classList.add('selected');
                 
-                switch (equationType) {
-                    case 0: // a + b = c
-                        const a1 = Math.floor(Math.random() * 6) + 5; // 5-10
-                        const b1 = Math.floor(Math.random() * 6) + 5; // 5-10
-                        blankPos = getRandomBlankPosition([0, 2, 4]);
-                        equation = buildEquation(a1, '+', b1, '=', a1 + b1, blankPos);
-                        solutionValue = calculateMissingValue(a1, b1, a1 + b1, '+', blankPos);
-                        break;
-                    case 1: // a - b = c
-                        const a2 = Math.floor(Math.random() * 6) + 6; // 6-11
-                        const b2 = Math.floor(Math.random() * 5) + 1; // 1-5
-                        blankPos = getRandomBlankPosition([0, 2, 4]);
-                        equation = buildEquation(a2, '-', b2, '=', a2 - b2, blankPos);
-                        solutionValue = calculateMissingValue(a2, b2, a2 - b2, '-', blankPos);
-                        break;
-                    case 2: // a * b = c
-                        const a3 = Math.floor(Math.random() * 4) + 2; // 2-5
-                        const b3 = Math.floor(Math.random() * 4) + 2; // 2-5
-                        blankPos = getRandomBlankPosition([0, 2, 4]);
-                        equation = buildEquation(a3, '×', b3, '=', a3 * b3, blankPos);
-                        solutionValue = calculateMissingValue(a3, b3, a3 * b3, '×', blankPos);
-                        break;
-                    case 3: // a / b = c (ensure integer division)
-                        const b4 = Math.floor(Math.random() * 3) + 2; // 2-4
-                        const c4 = Math.floor(Math.random() * 4) + 2; // 2-5
-                        const a4 = b4 * c4;
-                        blankPos = getRandomBlankPosition([0, 2, 4]);
-                        equation = buildEquation(a4, '÷', b4, '=', c4, blankPos);
-                        solutionValue = calculateMissingValue(a4, b4, c4, '÷', blankPos);
-                        break;
+                if (value === 'clear') {
+                    // Clear all selections
+                    document.querySelectorAll('.input-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    selectedValues = [];
+                } else {
+                    selectedValues = [value];
                 }
-                
-                solution[`${row},${blankPos}`] = solutionValue;
-                requiredAnswers.push(solutionValue);
-                
-                equation.forEach(cell => {
-                    if (typeof cell === 'number') visibleNumbers.push(cell);
-                });
-                
-                grid.push(equation);
             }
             
-            const choices = generateChoices(requiredAnswers, visibleNumbers, choiceCount, 1, 30);
-            
-            return { grid, solution, choices };
+            updateSelectedValuesDisplay();
+        });
+    });
+    
+    // Apply cell value
+    document.getElementById('applyCellValue').addEventListener('click', applyCellValue);
+    
+    // Save solution
+    document.getElementById('saveSolutionBtn').addEventListener('click', saveSolution);
+    document.getElementById('solutionValue').addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            saveSolution();
         }
-
-        // Generate hard level equations
-        function generateHardLevel(equationCount = 6, choiceCount = 20) {
-            const grid = [];
-            const solution = {};
-            const requiredAnswers = [];
-            const visibleNumbers = [];
-            
-            for (let row = 0; row < equationCount; row++) {
-                const equationType = Math.floor(Math.random() * 4);
-                let equation, solutionValue, blankPos;
-                
-                switch (equationType) {
-                    case 0: // a + b * c = d
-                        const b1 = Math.floor(Math.random() * 4) + 2; // 2-5
-                        const c1 = Math.floor(Math.random() * 4) + 2; // 2-5
-                        const a1 = Math.floor(Math.random() * 10) + 5; // 5-14
-                        const result1 = a1 + b1 * c1;
-                        blankPos = getRandomBlankPosition([0, 2, 4, 6]);
-                        equation = buildMultiOpEquation(a1, '+', b1, '×', c1, '=', result1, blankPos);
-                        solutionValue = calculateMultiOpMissingValue(a1, b1, c1, result1, ['+', '×'], blankPos);
-                        break;
-                    case 1: // a * b - c = d
-                        const a2 = Math.floor(Math.random() * 4) + 3; // 3-6
-                        const b2 = Math.floor(Math.random() * 4) + 3; // 3-6
-                        const c2 = Math.floor(Math.random() * 10) + 5; // 5-14
-                        const result2 = a2 * b2 - c2;
-                        blankPos = getRandomBlankPosition([0, 2, 4, 6]);
-                        equation = buildMultiOpEquation(a2, '×', b2, '-', c2, '=', result2, blankPos);
-                        solutionValue = calculateMultiOpMissingValue(a2, b2, c2, result2, ['×', '-'], blankPos);
-                        break;
-                    case 2: // a / b = c (integer division)
-                        const b3 = Math.floor(Math.random() * 3) + 2; // 2-4
-                        const c3 = Math.floor(Math.random() * 5) + 3; // 3-7
-                        const a3 = b3 * c3;
-                        blankPos = getRandomBlankPosition([0, 2, 4]);
-                        equation = buildEquation(a3, '÷', b3, '=', c3, blankPos);
-                        solutionValue = calculateMissingValue(a3, b3, c3, '÷', blankPos);
-                        break;
-                    case 3: // a - b / c = d (integer division)
-                        const c4 = Math.floor(Math.random() * 3) + 2; // 2-4
-                        const b4 = Math.floor(Math.random() * 8) + 4; // 4-11
-                        const a4 = Math.floor(Math.random() * 15) + 10; // 10-24
-                        const result4 = a4 - Math.floor(b4 / c4);
-                        blankPos = getRandomBlankPosition([0, 2, 4, 6]);
-                        equation = buildMultiOpEquation(a4, '-', b4, '÷', c4, '=', result4, blankPos);
-                        solutionValue = calculateMultiOpMissingValue(a4, b4, c4, result4, ['-', '÷'], blankPos);
-                        break;
-                }
-                
-                solution[`${row},${blankPos}`] = solutionValue;
-                requiredAnswers.push(solutionValue);
-                
-                equation.forEach(cell => {
-                    if (typeof cell === 'number') visibleNumbers.push(cell);
-                });
-                
-                grid.push(equation);
-            }
-            
-            const choices = generateChoices(requiredAnswers, visibleNumbers, choiceCount, 2, 100);
-            
-            return { grid, solution, choices };
-        }
-         // Generate expert level equations
+    });
+    
+    // Add custom number
+    document.getElementById('addCustomNumber').addEventListener('click', function() {
+        const customInput = document.getElementById('customNumberInput');
+        const value = customInput.value.trim();
         
-         function generateExpertLevel(equationCount = 8, choiceCount = 25) {
-    const grid = [];
-    const solution = {};
+        if (value) {
+            if (!selectedValues.includes(value)) {
+                selectedValues.push(value);
+                updateSelectedValuesDisplay();
+                customInput.value = '';
+            }
+        }
+    });
+    
+    // Allow pressing Enter to add choices
+    document.getElementById('newChoiceInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addChoice();
+            return false;
+        }
+    });
+}
+
+// Update the selected values display
+function updateSelectedValuesDisplay() {
+    const displayElement = document.getElementById('selectedValuesDisplay');
+    if (selectedValues.length > 0) {
+        displayElement.textContent = selectedValues.join('');
+    } else {
+        displayElement.textContent = 'None';
+    }
+}
+
+// Generate grid based on user input
+function generateGrid() {
+    const type = document.getElementById('type').value;
+    
+    if (type === 'manual') {
+        generateManualGrid();
+    } else {
+        // Automated grid will be generated via separate button
+        alert('Use the "Generate Automated Grid" button for automated generation.');
+    }
+}
+
+// Generate manual grid
+function generateManualGrid() {
+    const rows = parseInt(document.getElementById('rowsInput').value);
+    const cols = parseInt(document.getElementById('colsInput').value);
+    
+    if (isNaN(rows) || isNaN(cols) || rows < 1 || cols < 1) {
+        alert('Please enter valid row and column numbers.');
+        return;
+    }
+    
+    // Initialize grid data
+    gridData = [];
+    for (let i = 0; i < rows; i++) {
+        const row = [];
+        for (let j = 0; j < cols; j++) {
+            row.push('_'); // Start with all empty cells
+        }
+        gridData.push(row);
+    }
+    
+    // Reset solution and choices
+    solutionData = {};
+    choices = [];
+    
+    // Render grid and choices
+    renderGrid();
+    renderChoices();
+    
+    // Update JSON output
+    updateJsonOutput();
+}
+
+// Generate automated grid based on difficulty
+function generateAutomatedGrid() {
+    const difficulty = document.getElementById('difficulty').value;
+    const equationCount = parseInt(document.getElementById('equationCount').value) || 6;
+    const choiceCount = parseInt(document.getElementById('choiceCount').value) || 12;
+    // Use input rows/cols as canvas size (fallback to reasonable defaults)
+    let canvasRows = parseInt(document.getElementById('rowsInput').value) || 12;
+    let canvasCols = parseInt(document.getElementById('colsInput').value) || 12;
+
+    // Sanity clamp for canvas to avoid absurdly small area
+    canvasRows = Math.max(8, Math.min(24, canvasRows));
+    canvasCols = Math.max(8, Math.min(24, canvasCols));
+
+    if (!difficulty) {
+        alert('Please select a difficulty level.');
+        return;
+    }
+    
+    // Generate equation objects list (each level now returns an array of equation objects)
+    let generatedLevelData;
+    switch (difficulty) {
+        case '1': // Easy
+            generatedLevelData = generateEasyLevel(equationCount, choiceCount);
+            break;
+        case '2': // Medium
+            generatedLevelData = generateMediumLevel(equationCount, choiceCount);
+            break;
+        case '3': // Hard
+            generatedLevelData = generateHardLevel(equationCount, choiceCount);
+            break;
+        case '4': // Expert (if your UI includes this)
+            generatedLevelData = generateExpertLevel(equationCount, choiceCount);
+            break;
+        default:
+            generatedLevelData = generateEasyLevel(equationCount, choiceCount);
+    }
+    
+    // generatedLevelData contains { equations: [ {cells: [...], blankIndex, solutionValue }... ], choices }
+    // Assemble crossword-style grid with lots of randomization & crossovers:
+    const assembled = assembleCrossword(generatedLevelData.equations, canvasRows, canvasCols);
+    gridData = assembled.grid;
+    solutionData = assembled.solution;
+
+    // Use choices from level generator (generateChoices already returned candidate pool)
+    choices = generatedLevelData.choices || [];
+
+    // Update row and column inputs
+    document.getElementById('rowsInput').value = gridData.length;
+    document.getElementById('colsInput').value = gridData[0] ? gridData[0].length : 0;
+    
+    // Render grid and choices
+    renderGrid();
+    renderChoices();
+    
+    // Update JSON output
+    updateJsonOutput();
+    
+    // Inform user (no change to UI hooks)
+    alert('Automated grid generated successfully!');
+}
+
+// -------------------- LEVEL GENERATORS (modified to return equation objects) --------------------
+
+// Each level generator now returns:
+// { equations: [ { cells: [...cells...], blankIndex: <index>, solutionValue: <number> }, ... ],
+//   choices: [..] }
+
+// Helper to produce a simple equation object
+function makeEqObj(cellsArray, blankIndex, solutionValue) {
+    return { cells: cellsArray, blankIndex: blankIndex, solutionValue: solutionValue };
+}
+
+// Generate easy level equations - ONE missing place
+function generateEasyLevel(equationCount = 4, choiceCount = 12) {
+    const eqObjects = [];
     const requiredAnswers = [];
     const visibleNumbers = [];
 
-    for (let row = 0; row < equationCount; row++) {
-        const equationType = Math.floor(Math.random() * 5); // 5 types for expert
-        let equation, solutionValue, blankPos;
+    for (let i = 0; i < equationCount; i++) {
+        const a = Math.floor(Math.random() * 4) + 1; // 1-4
+        const b = Math.floor(Math.random() * 4) + 1; // 1-4
+        const op = Math.random() > 0.5 ? '+' : '-';
+        const result = op === '+' ? a + b : a - b;
+
+        // Only allow blanks on numbers (positions 0, 2, or 4) - ONE blank only
+        const blankPositions = [0, 2, 4];
+        const blankPos = blankPositions[Math.floor(Math.random() * blankPositions.length)];
+
+        const equation = new Array(5).fill('');
+        equation[0] = blankPos === 0 ? null : a;
+        equation[1] = op;
+        equation[2] = blankPos === 2 ? null : b;
+        equation[3] = '=';
+        equation[4] = blankPos === 4 ? null : result;
+
+        // Calculate and store the solution
+        let solutionValue;
+        switch (blankPos) {
+            case 0:
+                solutionValue = op === '+' ? result - b : result + b;
+                break;
+            case 2:
+                solutionValue = op === '+' ? result - a : a - result;
+                break;
+            case 4:
+                solutionValue = op === '+' ? a + b : a - b;
+                break;
+            default:
+                solutionValue = 0;
+        }
+
+        if (solutionValue < 0) {
+            i--;
+            continue;
+        }
+
+        // record visible numbers
+        equation.forEach(cell => {
+            if (typeof cell === 'number') visibleNumbers.push(cell);
+        });
+
+        eqObjects.push(makeEqObj(equation, blankPos, solutionValue));
+        requiredAnswers.push(solutionValue);
+    }
+
+    // If not enough equations, fill with simple fallback equations
+    while (eqObjects.length < equationCount) {
+        eqObjects.push(makeEqObj([2, '+', 3, '=', 5], 0, 2));
+        requiredAnswers.push(2);
+    }
+
+    const choices = generateChoices(requiredAnswers, visibleNumbers, choiceCount, 1, 20);
+
+    return { equations: eqObjects, choices };
+}
+
+// Generate medium level equations - TWO missing places
+function generateMediumLevel(equationCount = 4, choiceCount = 15) {
+    const eqObjects = [];
+    const requiredAnswers = [];
+    const visibleNumbers = [];
+
+    for (let i = 0; i < equationCount; i++) {
+        const equationType = Math.floor(Math.random() * 4);
+        let equation, solutionValue1, solutionValue2, blankPos1, blankPos2;
+
+        switch (equationType) {
+            case 0: // a + b = c
+                const a1 = Math.floor(Math.random() * 6) + 5; // 5-10
+                const b1 = Math.floor(Math.random() * 6) + 5; // 5-10
+                // TWO missing places for medium level
+                [blankPos1, blankPos2] = getTwoRandomBlankPositions([0, 2, 4]);
+                equation = buildEquationWithTwoBlanks(a1, '+', b1, '=', a1 + b1, blankPos1, blankPos2);
+                const solutions1 = calculateTwoMissingValues(a1, b1, a1 + b1, '+', blankPos1, blankPos2);
+                solutionValue1 = solutions1[0];
+                solutionValue2 = solutions1[1];
+                break;
+            case 1: // a - b = c
+                const a2 = Math.floor(Math.random() * 6) + 6; // 6-11
+                const b2 = Math.floor(Math.random() * 5) + 1; // 1-5
+                [blankPos1, blankPos2] = getTwoRandomBlankPositions([0, 2, 4]);
+                equation = buildEquationWithTwoBlanks(a2, '-', b2, '=', a2 - b2, blankPos1, blankPos2);
+                const solutions2 = calculateTwoMissingValues(a2, b2, a2 - b2, '-', blankPos1, blankPos2);
+                solutionValue1 = solutions2[0];
+                solutionValue2 = solutions2[1];
+                break;
+            case 2: // a * b = c
+                const a3 = Math.floor(Math.random() * 4) + 2; // 2-5
+                const b3 = Math.floor(Math.random() * 4) + 2; // 2-5
+                [blankPos1, blankPos2] = getTwoRandomBlankPositions([0, 2, 4]);
+                equation = buildEquationWithTwoBlanks(a3, '×', b3, '=', a3 * b3, blankPos1, blankPos2);
+                const solutions3 = calculateTwoMissingValues(a3, b3, a3 * b3, '×', blankPos1, blankPos2);
+                solutionValue1 = solutions3[0];
+                solutionValue2 = solutions3[1];
+                break;
+            case 3: // a / b = c (ensure integer division)
+                const b4 = Math.floor(Math.random() * 3) + 2; // 2-4
+                const c4 = Math.floor(Math.random() * 4) + 2; // 2-5
+                const a4 = b4 * c4;
+                [blankPos1, blankPos2] = getTwoRandomBlankPositions([0, 2, 4]);
+                equation = buildEquationWithTwoBlanks(a4, '÷', b4, '=', c4, blankPos1, blankPos2);
+                const solutions4 = calculateTwoMissingValues(a4, b4, c4, '÷', blankPos1, blankPos2);
+                solutionValue1 = solutions4[0];
+                solutionValue2 = solutions4[1];
+                break;
+        }
+
+        equation.forEach(cell => {
+            if (typeof cell === 'number') visibleNumbers.push(cell);
+        });
+
+        // For equations with two blanks, we need to store both solution values
+        // We'll modify the equation object to handle multiple blanks
+        const eqObj = { 
+            cells: equation, 
+            blankIndices: [blankPos1, blankPos2], 
+            solutionValues: [solutionValue1, solutionValue2] 
+        };
+        
+        eqObjects.push(eqObj);
+        requiredAnswers.push(solutionValue1);
+        requiredAnswers.push(solutionValue2);
+    }
+
+    const choices = generateChoices(requiredAnswers, visibleNumbers, choiceCount, 1, 40);
+
+    return { equations: eqObjects, choices };
+}
+
+// Generate hard level equations - TWO missing places
+function generateHardLevel(equationCount = 6, choiceCount = 20) {
+    const eqObjects = [];
+    const requiredAnswers = [];
+    const visibleNumbers = [];
+
+    for (let i = 0; i < equationCount; i++) {
+        const equationType = Math.floor(Math.random() * 4);
+        let equation, solutionValue1, solutionValue2, blankPos1, blankPos2;
+
+        switch (equationType) {
+            case 0: // a + b * c = d
+                const b1 = Math.floor(Math.random() * 4) + 2; // 2-5
+                const c1 = Math.floor(Math.random() * 4) + 2; // 2-5
+                const a1 = Math.floor(Math.random() * 10) + 5; // 5-14
+                const result1 = a1 + b1 * c1;
+                [blankPos1, blankPos2] = getTwoRandomBlankPositions([0, 2, 4, 6]);
+                equation = buildMultiOpEquationWithTwoBlanks(a1, '+', b1, '×', c1, '=', result1, blankPos1, blankPos2);
+                const solutions1 = calculateMultiOpTwoMissingValues(a1, b1, c1, result1, ['+', '×'], blankPos1, blankPos2);
+                solutionValue1 = solutions1[0];
+                solutionValue2 = solutions1[1];
+                break;
+            case 1: // a * b - c = d
+                const a2 = Math.floor(Math.random() * 4) + 3; // 3-6
+                const b2 = Math.floor(Math.random() * 4) + 3; // 3-6
+                const c2 = Math.floor(Math.random() * 10) + 5; // 5-14
+                const result2 = a2 * b2 - c2;
+                [blankPos1, blankPos2] = getTwoRandomBlankPositions([0, 2, 4, 6]);
+                equation = buildMultiOpEquationWithTwoBlanks(a2, '×', b2, '-', c2, '=', result2, blankPos1, blankPos2);
+                const solutions2 = calculateMultiOpTwoMissingValues(a2, b2, c2, result2, ['×', '-'], blankPos1, blankPos2);
+                solutionValue1 = solutions2[0];
+                solutionValue2 = solutions2[1];
+                break;
+            case 2: // a / b = c (integer division)
+                const b3 = Math.floor(Math.random() * 3) + 2; // 2-4
+                const c3 = Math.floor(Math.random() * 5) + 3; // 3-7
+                const a3 = b3 * c3;
+                [blankPos1, blankPos2] = getTwoRandomBlankPositions([0, 2, 4]);
+                equation = buildEquationWithTwoBlanks(a3, '÷', b3, '=', c3, blankPos1, blankPos2);
+                const solutions3 = calculateTwoMissingValues(a3, b3, c3, '÷', blankPos1, blankPos2);
+                solutionValue1 = solutions3[0];
+                solutionValue2 = solutions3[1];
+                break;
+            case 3: // a - b / c = d (integer division)
+                const c4 = Math.floor(Math.random() * 3) + 2; // 2-4
+                const b4 = Math.floor(Math.random() * 8) + 4; // 4-11
+                const a4 = Math.floor(Math.random() * 15) + 10; // 10-24
+                const result4 = a4 - Math.floor(b4 / c4);
+                [blankPos1, blankPos2] = getTwoRandomBlankPositions([0, 2, 4, 6]);
+                equation = buildMultiOpEquationWithTwoBlanks(a4, '-', b4, '÷', c4, '=', result4, blankPos1, blankPos2);
+                const solutions4 = calculateMultiOpTwoMissingValues(a4, b4, c4, result4, ['-', '÷'], blankPos1, blankPos2);
+                solutionValue1 = solutions4[0];
+                solutionValue2 = solutions4[1];
+                break;
+        }
+
+        equation.forEach(cell => {
+            if (typeof cell === 'number') visibleNumbers.push(cell);
+        });
+
+        const eqObj = { 
+            cells: equation, 
+            blankIndices: [blankPos1, blankPos2], 
+            solutionValues: [solutionValue1, solutionValue2] 
+        };
+        
+        eqObjects.push(eqObj);
+        requiredAnswers.push(solutionValue1);
+        requiredAnswers.push(solutionValue2);
+    }
+
+    const choices = generateChoices(requiredAnswers, visibleNumbers, choiceCount, 2, 120);
+
+    return { equations: eqObjects, choices };
+}
+
+// Generate expert level equations - TWO missing places
+function generateExpertLevel(equationCount = 8, choiceCount = 25) {
+    const eqObjects = [];
+    const requiredAnswers = [];
+    const visibleNumbers = [];
+
+    for (let i = 0; i < equationCount; i++) {
+        const equationType = Math.floor(Math.random() * 5);
+        let equation, solutionValue1, solutionValue2, blankPos1, blankPos2;
 
         switch (equationType) {
             case 0: // a + b * c - d = e
@@ -931,9 +978,11 @@
                 const c1 = Math.floor(Math.random() * 5) + 2;   // 2-6
                 const d1 = Math.floor(Math.random() * 10) + 5;  // 5-14
                 const result1 = a1 + b1 * c1 - d1;
-                blankPos = getRandomBlankPosition([0,2,4,6,8]);
-                equation = buildMultiOpEquation(a1, '+', b1, '×', c1, '-', d1, '=', result1, blankPos);
-                solutionValue = calculateMultiOpMissingValue(a1, b1, c1, d1, result1, ['+', '×', '-'], blankPos);
+                [blankPos1, blankPos2] = getTwoRandomBlankPositions([0,2,4,6,8]);
+                equation = buildMultiOpEquationWithTwoBlanks(a1, '+', b1, '×', c1, '-', d1, '=', result1, blankPos1, blankPos2);
+                const solutions1 = calculateMultiOpTwoMissingValues(a1, b1, c1, d1, result1, ['+', '×', '-'], blankPos1, blankPos2);
+                solutionValue1 = solutions1[0];
+                solutionValue2 = solutions1[1];
                 break;
 
             case 1: // (a * b) / c + d = e
@@ -942,9 +991,11 @@
                 const c2 = Math.floor(Math.random() * 4) + 2;   // 2-5
                 const d2 = Math.floor(Math.random() * 20) + 5;  // 5-24
                 const result2 = Math.floor((a2 * b2) / c2) + d2;
-                blankPos = getRandomBlankPosition([0,2,4,6,8]);
-                equation = buildMultiOpEquation(a2, '×', b2, '÷', c2, '+', d2, '=', result2, blankPos);
-                solutionValue = calculateMultiOpMissingValue(a2, b2, c2, d2, result2, ['×','÷','+'], blankPos);
+                [blankPos1, blankPos2] = getTwoRandomBlankPositions([0,2,4,6,8]);
+                equation = buildMultiOpEquationWithTwoBlanks(a2, '×', b2, '÷', c2, '+', d2, '=', result2, blankPos1, blankPos2);
+                const solutions2 = calculateMultiOpTwoMissingValues(a2, b2, c2, d2, result2, ['×','÷','+'], blankPos1, blankPos2);
+                solutionValue1 = solutions2[0];
+                solutionValue2 = solutions2[1];
                 break;
 
             case 2: // a - (b + c) * d = e
@@ -953,9 +1004,11 @@
                 const c3 = Math.floor(Math.random() * 10) + 1;  // 1-10
                 const d3 = Math.floor(Math.random() * 4) + 2;   // 2-5
                 const result3 = a3 - (b3 + c3) * d3;
-                blankPos = getRandomBlankPosition([0,2,4,6,8]);
-                equation = buildMultiOpEquation(a3, '-', b3, '+', c3, '×', d3, '=', result3, blankPos);
-                solutionValue = calculateMultiOpMissingValue(a3, b3, c3, d3, result3, ['-','+','×'], blankPos);
+                [blankPos1, blankPos2] = getTwoRandomBlankPositions([0,2,4,6,8]);
+                equation = buildMultiOpEquationWithTwoBlanks(a3, '-', b3, '+', c3, '×', d3, '=', result3, blankPos1, blankPos2);
+                const solutions3 = calculateMultiOpTwoMissingValues(a3, b3, c3, d3, result3, ['-','+','×'], blankPos1, blankPos2);
+                solutionValue1 = solutions3[0];
+                solutionValue2 = solutions3[1];
                 break;
 
             case 3: // a / b + c * d - e = f
@@ -965,9 +1018,11 @@
                 const e4 = Math.floor(Math.random() * 10) + 5;  // 5-14
                 const a4 = b4 * Math.floor(Math.random() * 10 + 2); // ensure divisible
                 const result4 = Math.floor(a4 / b4) + c4 * d4 - e4;
-                blankPos = getRandomBlankPosition([0,2,4,6,8,10]);
-                equation = buildMultiOpEquation(a4, '÷', b4, '+', c4, '×', d4, '-', e4, '=', result4, blankPos);
-                solutionValue = calculateMultiOpMissingValue(a4, b4, c4, d4, e4, result4, ['÷','+','×','-'], blankPos);
+                [blankPos1, blankPos2] = getTwoRandomBlankPositions([0,2,4,6,8,10]);
+                equation = buildMultiOpEquationWithTwoBlanks(a4, '÷', b4, '+', c4, '×', d4, '-', e4, '=', result4, blankPos1, blankPos2);
+                const solutions4 = calculateMultiOpTwoMissingValues(a4, b4, c4, d4, e4, result4, ['÷','+','×','-'], blankPos1, blankPos2);
+                solutionValue1 = solutions4[0];
+                solutionValue2 = solutions4[1];
                 break;
 
             case 4: // Complex mix: (a + b) * c / d - e = f
@@ -977,455 +1032,744 @@
                 const d5 = Math.floor(Math.random() * 5) + 2;   // 2-6
                 const e5 = Math.floor(Math.random() * 10) + 1;  // 1-10
                 const result5 = Math.floor((a5 + b5) * c5 / d5) - e5;
-                blankPos = getRandomBlankPosition([0,2,4,6,8,10]);
-                equation = buildMultiOpEquation(a5, '+', b5, '×', c5, '÷', d5, '-', e5, '=', result5, blankPos);
-                solutionValue = calculateMultiOpMissingValue(a5, b5, c5, d5, e5, result5, ['+','×','÷','-'], blankPos);
+                [blankPos1, blankPos2] = getTwoRandomBlankPositions([0,2,4,6,8,10]);
+                equation = buildMultiOpEquationWithTwoBlanks(a5, '+', b5, '×', c5, '÷', d5, '-', e5, '=', result5, blankPos1, blankPos2);
+                const solutions5 = calculateMultiOpTwoMissingValues(a5, b5, c5, d5, e5, result5, ['+','×','÷','-'], blankPos1, blankPos2);
+                solutionValue1 = solutions5[0];
+                solutionValue2 = solutions5[1];
                 break;
         }
-
-        solution[`${row},${blankPos}`] = solutionValue;
-        requiredAnswers.push(solutionValue);
 
         equation.forEach(cell => {
             if (typeof cell === 'number') visibleNumbers.push(cell);
         });
 
-        grid.push(equation);
+        const eqObj = { 
+            cells: equation, 
+            blankIndices: [blankPos1, blankPos2], 
+            solutionValues: [solutionValue1, solutionValue2] 
+        };
+        
+        eqObjects.push(eqObj);
+        requiredAnswers.push(solutionValue1);
+        requiredAnswers.push(solutionValue2);
     }
 
-    const choices = generateChoices(requiredAnswers, visibleNumbers, choiceCount, 5, 200);
+    const choices = generateChoices(requiredAnswers, visibleNumbers, choiceCount, 5, 300);
 
-    return { grid, solution, choices };
+    return { equations: eqObjects, choices };
 }
 
-<<<<<<< HEAD
+// -------------------- NEW HELPER FUNCTIONS FOR TWO BLANKS --------------------
 
-        // Helper functions for automated generation
-        function getRandomBlankPosition(positions) {
-            return positions[Math.floor(Math.random() * positions.length)];
+// Get two distinct random blank positions
+function getTwoRandomBlankPositions(positions) {
+    const pos1 = positions[Math.floor(Math.random() * positions.length)];
+    let pos2 = positions[Math.floor(Math.random() * positions.length)];
+    // Ensure positions are different
+    while (pos2 === pos1) {
+        pos2 = positions[Math.floor(Math.random() * positions.length)];
+    }
+    return [pos1, pos2];
+}
+
+// Build equation with two blanks
+function buildEquationWithTwoBlanks(a, op1, b, equals, result, blankPos1, blankPos2) {
+    return [
+        (blankPos1 === 0 || blankPos2 === 0) ? null : a,
+        op1,
+        (blankPos1 === 2 || blankPos2 === 2) ? null : b,
+        equals,
+        (blankPos1 === 4 || blankPos2 === 4) ? null : result,
+    ];
+}
+
+// Build multi-op equation with two blanks
+function buildMultiOpEquationWithTwoBlanks(a, op1, b, op2, c, equals, result, blankPos1, blankPos2) {
+    return [
+        (blankPos1 === 0 || blankPos2 === 0) ? null : a,
+        op1,
+        (blankPos1 === 2 || blankPos2 === 2) ? null : b,
+        op2,
+        (blankPos1 === 4 || blankPos2 === 4) ? null : c,
+        equals,
+        (blankPos1 === 6 || blankPos2 === 6) ? null : result,
+    ];
+}
+
+// Calculate two missing values for simple equations
+function calculateTwoMissingValues(a, b, result, op, blankPos1, blankPos2) {
+    const solutions = [];
+    
+    // Calculate solution for first blank
+    solutions.push(calculateSingleMissingValue(a, b, result, op, blankPos1));
+    
+    // Calculate solution for second blank
+    solutions.push(calculateSingleMissingValue(a, b, result, op, blankPos2));
+    
+    return solutions;
+}
+
+// Calculate single missing value (helper function)
+function calculateSingleMissingValue(a, b, result, op, blankPos) {
+    switch (op) {
+        case '+':
+            return blankPos === 0 ? result - b :
+                   blankPos === 2 ? result - a :
+                   a + b;
+        case '-':
+            return blankPos === 0 ? result + b :
+                   blankPos === 2 ? a - result :
+                   a - b;
+        case '×':
+            return blankPos === 0 ? Math.floor(result / b) :
+                   blankPos === 2 ? Math.floor(result / a) :
+                   a * b;
+        case '÷':
+            return blankPos === 0 ? b * result :
+                   blankPos === 2 ? Math.floor(a / result) :
+                   Math.floor(a / b);
+        default:
+            return 0;
+    }
+}
+
+// Calculate two missing values for multi-op equations
+function calculateMultiOpTwoMissingValues(a, b, c, result, ops, blankPos1, blankPos2) {
+    const solutions = [];
+    
+    // Calculate solution for first blank
+    solutions.push(calculateMultiOpSingleMissingValue(a, b, c, result, ops, blankPos1));
+    
+    // Calculate solution for second blank
+    solutions.push(calculateMultiOpSingleMissingValue(a, b, c, result, ops, blankPos2));
+    
+    return solutions;
+}
+
+// Calculate single missing value for multi-op equations (helper function)
+function calculateMultiOpSingleMissingValue(a, b, c, result, ops, blankPos) {
+    const op1 = ops[0];
+    const op2 = ops[1];
+    
+    switch (blankPos) {
+        case 0: // a
+            if (op1 === '+' && op2 === '×') return result - (b * c);
+            if (op1 === '×' && op2 === '-') return Math.floor((result + c) / b);
+            if (op1 === '-' && op2 === '÷') return result + Math.floor(b / c);
+            return 0;
+        case 2: // b
+            if (op1 === '+' && op2 === '×') return Math.floor((result - a) / c);
+            if (op1 === '×' && op2 === '-') return Math.floor((result + c) / a);
+            if (op1 === '-' && op2 === '÷') return (a - result) * c;
+            return 0;
+        case 4: // c
+            if (op1 === '+' && op2 === '×') return Math.floor((result - a) / b);
+            if (op1 === '×' && op2 === '-') return a * b - result;
+            if (op1 === '-' && op2 === '÷') return Math.floor(b / (a - result));
+            return 0;
+        case 6: // result
+            if (op1 === '+' && op2 === '×') return a + b * c;
+            if (op1 === '×' && op2 === '-') return a * b - c;
+            if (op1 === '-' && op2 === '÷') return a - Math.floor(b / c);
+            return 0;
+        default:
+            return 0;
+    }
+}
+
+function generateChoices(requiredAnswers, visibleNumbers, count, min, max) {
+    const choices = [...requiredAnswers];
+    const visibleNonSolutions = visibleNumbers.filter(n => !requiredAnswers.includes(n));
+    
+    // Add some visible non-solution numbers
+    for (const num of visibleNonSolutions) {
+        if (choices.length < count && !choices.includes(num)) {
+            choices.push(num);
         }
-
-        function buildEquation(a, op1, b, equals, result, blankPos) {
-            return [
-                blankPos === 0 ? null : a,
-                op1,
-                blankPos === 2 ? null : b,
-                equals,
-                blankPos === 4 ? null : result,
-=======
-        // Generate expert level equations (like the provided example)
-        function generateExpertLevel(equationCount = 8, choiceCount = 24) {
-            // Create a grid similar to the provided expert example, replacing "?" with null
-            const grid = [
-                [null, "_", "22", "_", "_", "_", null, "+", "4", "=", null, "_", "_"],
-                ["×", "_", "-", "_", "_", "_", "+", "_", "+", "_", "×", "_", "_"],
-                [null, "+", null, "=", null, "_", null, "-", null, "=", null, "_", "_"],
-                ["=", "_", "=", "_", "+", "_", "=", "_", "=", "_", "=", "_", "_"],
-                ["72", "_", null, "+", null, "=", "29", "_", null, "+", "78", "=", null],
-                ["_", "_", "_", "_", "=", "_", "_", "_", "_", "_", "_", "_", "_"],
-                ["_", "_", null, "×", null, "=", "54", "_", "_", "_", null, "_", "_"],
-                ["_", "_", "-", "_", "_", "_", "+", "_", "_", "_", "+", "_", "_"],
-                ["_", "_", "1", "_", "74", "_", null, "+", "25", "=", "36", "_", "_"],
-                ["_", "_", "=", "_", "-", "_", "=", "_", "-", "_", "=", "_", "_"],
-                ["_", "_", null, "_", null, "-", null, "=", null, "_", "47", "_", "_"],
-                ["_", "_", "_", "_", "=", "_", "_", "_", "=", "_", "_", "_", "_"],
-                ["_", "_", "_", "_", null, "+", "16", "=", "23", "_", "_", "_", "_"]
->>>>>>> d6bf6c6859d852e591db991078a298f4435091bf
-            ];
+    }
+    
+    // Fill remaining with random numbers, ensuring no duplicates
+    while (choices.length < count) {
+        const randomNum = min + Math.floor(Math.random() * (max - min + 1));
+        if (!choices.includes(randomNum)) {
+            choices.push(randomNum);
         }
+    }
+    
+    // Shuffle the choices
+    for (let i = choices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [choices[i], choices[j]] = [choices[j], choices[i]];
+    }
+    
+    return choices;
+}
 
-        function buildMultiOpEquation(a, op1, b, op2, c, equals, result, blankPos) {
-            return [
-                blankPos === 0 ? null : a,
-                op1,
-                blankPos === 2 ? null : b,
-                op2,
-                blankPos === 4 ? null : c,
-                equals,
-                blankPos === 6 ? null : result,
-            ];
+// -------------------- CROSSWORD ASSEMBLER (key new function) --------------------
+// This function attempts to place many equations into a canvas of size rows x cols.
+// Each equation object: { cells: [...], blankIndex, solutionValue }
+// Returns { grid: 2D array, solution: { "r,c": value } }
+
+function assembleCrossword(equations, rows, cols) {
+    // Initialize canvas with '_' (empty)
+    const grid = [];
+    for (let r = 0; r < rows; r++) {
+        const row = [];
+        for (let c = 0; c < cols; c++) row.push('_');
+        grid.push(row);
+    }
+
+    // We will keep a record of placed items: { eqIndex, orientation, startR, startC }
+    const placements = [];
+    const solutionMap = {}; // "r,c" -> value for null blanks
+
+    // Randomize equation order to get varied patterns
+    const indices = Array.from(equations.keys());
+    shuffleArray(indices);
+
+    // Place first equation roughly near top-left center to reduce fragmentation
+    if (indices.length > 0) {
+        const idx = indices.shift();
+        const eq = equations[idx];
+        // Stagger length to choose orientation that fits better
+        placeEquationInGrid(eq, grid, rows, cols, true); // force first placement
+        placements.push(idx);
+    }
+
+    // For the rest we try many random placements, preferring crossings when possible
+    for (const eqIndex of indices) {
+        const eq = equations[eqIndex];
+        const placed = placeEquationInGrid(eq, grid, rows, cols, false);
+        if (placed) {
+            placements.push(eqIndex);
+        } else {
+            // last resort: try to append near edges (increase retry attempts)
+            placeEquationInGrid(eq, grid, rows, cols, true, 80);
         }
+    }
 
-        function calculateMissingValue(a, b, result, op, blankPos) {
-            switch (op) {
-                case '+':
-                    return blankPos === 0 ? result - b :
-                           blankPos === 2 ? result - a :
-                           a + b;
-                case '-':
-                    return blankPos === 0 ? result + b :
-                           blankPos === 2 ? a - result :
-                           a - b;
-                case '×':
-                    return blankPos === 0 ? Math.floor(result / b) :
-                           blankPos === 2 ? Math.floor(result / a) :
-                           a * b;
-                case '÷':
-                    return blankPos === 0 ? b * result :
-                           blankPos === 2 ? Math.floor(a / result) :
-                           Math.floor(a / b);
-                default:
-                    return 0;
+    // After placing all eqs, build solution map from the actual grid coordinates where null blanks are placed
+    // We need to search grid for positions where the placed cell came from a blank in the source eq
+    // To do this, we keep a trace of cells per equation in the placeEquationInGrid function (it writes a marker)
+    // For simplicity, we'll scan grid and for every cell that equals null placeholder marker we will map it.
+    // We used the special marker "__BLANK__" when placing blank cells.
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            if (grid[r][c] === '__BLANK__') {
+                // find which equation & solutionValue corresponds to this cell - we stored an extra meta grid
+                // But we didn't keep meta mapping globally to avoid complexity — instead we can attempt to derive by checking neighbours
+                // Simpler approach: store blanks in a temporary list while placing (we push entries into global tempBlanks)
             }
         }
+    }
 
-        function calculateMultiOpMissingValue(a, b, c, result, ops, blankPos) {
-            const op1 = ops[0];
-            const op2 = ops[1];
-            
-            switch (blankPos) {
-                case 0: // a
-                    if (op1 === '+' && op2 === '×') return result - (b * c);
-                    if (op1 === '×' && op2 === '-') return Math.floor((result + c) / b);
-                    if (op1 === '-' && op2 === '÷') return result + Math.floor(b / c);
-                    return 0;
-                case 2: // b
-                    if (op1 === '+' && op2 === '×') return Math.floor((result - a) / c);
-                    if (op1 === '×' && op2 === '-') return Math.floor((result + c) / a);
-                    if (op1 === '-' && op2 === '÷') return (a - result) * c;
-                    return 0;
-                case 4: // c
-                    if (op1 === '+' && op2 === '×') return Math.floor((result - a) / b);
-                    if (op1 === '×' && op2 === '-') return a * b - result;
-                    if (op1 === '-' && op2 === '÷') return Math.floor(b / (a - result));
-                    return 0;
-                case 6: // result
-                    if (op1 === '+' && op2 === '×') return a + b * c;
-                    if (op1 === '×' && op2 === '-') return a * b - c;
-                    if (op1 === '-' && op2 === '÷') return a - Math.floor(b / c);
-                    return 0;
-                default:
-                    return 0;
+    // Because we need reliable mapping from eq blank to grid coords, we re-implement placing with an internal global collector
+    // We'll rebuild grid cleanly but this time with a blanks collector so we can map solution values reliably.
+
+    // REBUILD using placement records with exact mapping (safer)
+    const { finalGrid, finalSolution } = rebuildGridFromScratch(equations, rows, cols);
+    return { grid: finalGrid, solution: finalSolution };
+}
+
+// Helper: rebuildGridFromScratch - tries many random placements to get a final layout with solution mapping
+function rebuildGridFromScratch(equations, rows, cols) {
+    // We attempt multiple global tries to get a well-placed crossword
+    const MAX_GLOBAL_TRIES = 60;
+    let best = { grid: null, solution: null, placedCount: 0 };
+
+    for (let attempt = 0; attempt < MAX_GLOBAL_TRIES; attempt++) {
+        // init empty grid and meta maps
+        const grid = [];
+        const owner = []; // owner[r][c] = { eqIndex, cellIndex } for traceability
+        for (let r = 0; r < rows; r++) {
+            const row = [];
+            const rowOwner = [];
+            for (let c = 0; c < cols; c++) {
+                row.push('_');
+                rowOwner.push(null);
             }
+            grid.push(row);
+            owner.push(rowOwner);
         }
 
-        function generateChoices(requiredAnswers, visibleNumbers, count, min, max) {
-            const choices = [...requiredAnswers];
-            const visibleNonSolutions = visibleNumbers.filter(n => !requiredAnswers.includes(n));
-            
-            // Add some visible non-solution numbers
-            for (const num of visibleNonSolutions) {
-                if (choices.length < count && !choices.includes(num)) {
-                    choices.push(num);
-                }
-            }
-            
-            // Fill remaining with random numbers, ensuring no duplicates
-            while (choices.length < count) {
-                const randomNum = min + Math.floor(Math.random() * (max - min + 1));
-                if (!choices.includes(randomNum)) {
-                    choices.push(randomNum);
-                }
-            }
-            
-            // Shuffle the choices
-            for (let i = choices.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [choices[i], choices[j]] = [choices[j], choices[i]];
-            }
-            
-            return choices;
+        const indices = Array.from(equations.keys());
+        shuffleArray(indices);
+
+        let placedCount = 0;
+
+        // place each equation with greedy random attempts
+        for (const eqIdx of indices) {
+            const eq = equations[eqIdx];
+            const success = tryPlaceEquationWithOwner(eq, eqIdx, grid, owner, rows, cols, 60);
+            if (success) placedCount++;
         }
 
-        // Render the grid
-        function renderGrid() {
-            const gridContainer = document.getElementById('gridContainer');
-            gridContainer.innerHTML = '';
-            
-            // Create grid rows
-            for (let row = 0; row < gridData.length; row++) {
-                const gridRow = document.createElement('div');
-                gridRow.className = 'grid-row';
-                
-                for (let col = 0; col < gridData[row].length; col++) {
-                    const cellValue = gridData[row][col];
-                    const cell = document.createElement('div');
-                    cell.className = 'grid-cell';
-                    cell.dataset.row = row;
-                    cell.dataset.col = col;
-                    
-                    if (cellValue === null) {
-                        cell.classList.add('hidden');
-                        cell.innerHTML = '<i class="fas fa-question"></i>';
-                    } else if (cellValue === '_') {
-                        cell.classList.add('empty');
-                        cell.textContent = '';
-                    } else if (['+', '-', '×', '÷'].includes(cellValue)) {
-                        cell.classList.add('operator');
-                        cell.textContent = cellValue;
-                    } else if (cellValue === '=') {
-                        cell.classList.add('equals');
-                        cell.textContent = cellValue;
-                    } else {
-                        // Check if this cell has a solution
-                        const cellKey = `${row},${col}`;
-                        if (solutionData[cellKey] !== undefined) {
-                            cell.classList.add('input');
-                        } else {
-                            cell.classList.add('fixed');
-                        }
-                        cell.textContent = cellValue;
+        // scoring: prefer placements with larger placedCount and compactness
+        if (placedCount > best.placedCount) {
+            best.placedCount = placedCount;
+            best.grid = clone2D(grid);
+            // derive solution map
+            const solution = {};
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const meta = owner[r][c];
+                    if (meta && meta.isBlank) {
+                        // meta contains eqIndex and blankIndex and its solutionValue
+                        solution[`${r},${c}`] = meta.solutionValue;
                     }
-                    
-                    // Add click event
-                    cell.addEventListener('click', handleCellClick);
-                    
-                    gridRow.appendChild(cell);
                 }
-                
-                gridContainer.appendChild(gridRow);
             }
-        }
+            best.solution = solution;
 
-        // Handle cell click
-        function handleCellClick(event) {
-            const cell = event.target;
-            selectedCell = cell;
-            
-            // Remove previous selection
-            document.querySelectorAll('.grid-cell.selected').forEach(cell => {
-                cell.classList.remove('selected');
-            });
-            
-            // Select current cell
-            cell.classList.add('selected');
-            
-            // Show cell editor modal
-            document.getElementById('currentCellPos').textContent = 
-                `Row: ${cell.dataset.row}, Col: ${cell.dataset.col}`;
-            
-            // Clear previous selection in modal
-            document.querySelectorAll('.input-option').forEach(opt => opt.classList.remove('selected'));
-            
-            // Pre-select the current value if it exists
-            const row = parseInt(cell.dataset.row);
-            const col = parseInt(cell.dataset.col);
-            const currentValue = gridData[row][col];
-            
-            // Reset selected values
-            selectedValues = [];
-            
-            if (currentValue && currentValue !== '_' && currentValue !== null) {
-                // Handle multiple values (comma separated)
-                const values = currentValue.split(',');
-                
-                values.forEach(value => {
-                    const trimmedValue = value.trim();
-                    document.querySelectorAll('.input-option').forEach(opt => {
-                        if (opt.getAttribute('data-value') === trimmedValue) {
-                            opt.classList.add('selected');
-                            selectedValues.push(trimmedValue);
-                        }
-                    });
-                });
-            }
-            
-            updateSelectedValuesDisplay();
-            cellEditorModal.show();
+            // If we placed all equations successfully, break early
+            if (placedCount === equations.length) break;
         }
+    }
 
-        // Apply cell value from modal
-        function applyCellValue() {
-            if (!selectedCell) return;
-            
-            const row = parseInt(selectedCell.dataset.row);
-            const col = parseInt(selectedCell.dataset.col);
-            
-            // Use selected values or default to blank
-            if (selectedValues.length > 0) {
-                // Check if we have only numbers selected (merge them)
-                const hasOnlyNumbers = selectedValues.every(val => !isNaN(val));
-                
-                if (hasOnlyNumbers) {
-                    // Merge numbers into a single value (e.g., 1 and 2 become 12)
-                    gridData[row][col] = selectedValues.join('');
-                } else {
-                    // For operators and special values, use the first selected value
-                    gridData[row][col] = selectedValues[0];
-                }
+    // As fallback, if nothing placed, return minimal blank grid
+    if (!best.grid) {
+        const fallbackGrid = [];
+        for (let r = 0; r < rows; r++) {
+            const row = [];
+            for (let c = 0; c < cols; c++) row.push('_');
+            fallbackGrid.push(row);
+        }
+        return { finalGrid: fallbackGrid, finalSolution: {} };
+    }
+
+    // convert internal special markers to final displayable values:
+    // We used a variety of put values: numbers/operators/'=' or null blanks. owner stores isBlank flags.
+    // Ensure that blanks are stored as null in the final grid (to match your render logic)
+    const finalGrid = best.grid.map(row => row.map(cell => {
+        if (cell === '__BLANK__') return null;
+        return cell;
+    }));
+
+    return { finalGrid, finalSolution: best.solution };
+}
+
+// Attempt to place a single equation into grid while writing owner metadata
+function tryPlaceEquationWithOwner(eqObj, eqIdx, grid, owner, rows, cols, maxAttempts = 80) {
+    // eqObj.cells is an array like [a, op, b, op, c, '=', res] with some nulls (these nulls are blanks to be filled)
+    const cells = eqObj.cells;
+    const len = cells.length;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        const orientation = Math.random() < 0.5 ? 'H' : 'V';
+        const rStart = Math.floor(Math.random() * rows);
+        const cStart = Math.floor(Math.random() * cols);
+
+        // compute end pos
+        const rEnd = orientation === 'H' ? rStart : rStart + len - 1;
+        const cEnd = orientation === 'H' ? cStart + len - 1 : cStart;
+
+        if (rEnd >= rows || cEnd >= cols) continue; // out of bounds
+
+        // Check conflicts and adjacency rules:
+        let overlaps = 0;
+        let conflict = false;
+
+        for (let k = 0; k < len; k++) {
+            const r = orientation === 'H' ? rStart : (rStart + k);
+            const c = orientation === 'H' ? (cStart + k) : cStart;
+            const target = grid[r][c];
+            const newVal = cells[k];
+
+            if (target === '_') {
+                // free cell - ok
             } else {
-                gridData[row][col] = '_';
-                
-                // Remove from solution if it was there
+                // if matching same as existing allowed (number/operator/equals)
+                // We consider numbers and operators string-equal (operators are '+' '-' '×' '÷' '=')
+                // If newVal is null (blank) we must not conflict with an existing non-blank cell
+                if (newVal === null) {
+                    // blank overlapping non-empty cell is a conflict
+                    conflict = conflict || (target !== '_');
+                } else {
+                    // newVal not null, must match target to be allowed
+                    // target might be a number (number or string) => compare as string
+                    if (String(target) !== String(newVal)) {
+                        conflict = true;
+                    } else {
+                        overlaps++;
+                    }
+                }
+            }
+
+            if (conflict) break;
+        }
+
+        if (conflict) continue;
+
+        // Enforce at least one crossing with existing content (to create puzzle connectivity) unless grid is empty
+        const hasAnyContent = grid.some(row => row.some(cell => cell !== '_'));
+        if (hasAnyContent && overlaps === 0) {
+            // Try another placement to encourage crossings
+            // But occasionally allow non-crossing to avoid deadlock
+            if (Math.random() > 0.25) continue;
+        }
+
+        // If passes, write into grid and owner meta
+        for (let k = 0; k < len; k++) {
+            const r = orientation === 'H' ? rStart : (rStart + k);
+            const c = orientation === 'H' ? (cStart + k) : cStart;
+            const newVal = cells[k];
+
+            if (newVal === null) {
+                grid[r][c] = '__BLANK__';
+                owner[r][c] = { eqIndex: eqIdx, cellIndex: k, isBlank: true, solutionValue: eqObj.solutionValue };
+            } else {
+                grid[r][c] = newVal;
+                owner[r][c] = { eqIndex: eqIdx, cellIndex: k, isBlank: false };
+            }
+        }
+
+        return true; // placed
+    }
+
+    return false; // failed to place
+}
+
+// Utility: placeEquationInGrid - older function kept for compatibility (not used in rebuild approach)
+// but we keep it for fallback behavior. It tries to place an eq either forced or with attempts.
+function placeEquationInGrid(eqObj, grid, rows, cols, force = false, maxAttempts = 40) {
+    // naive small attempt using tryPlaceEquationWithOwner to set cells directly
+    // We'll create a temporary owner and then copy into grid if success
+    const tempGrid = clone2D(grid);
+    const tempOwner = [];
+    for (let r = 0; r < rows; r++) {
+        const row = [];
+        for (let c = 0; c < cols; c++) row.push(null);
+        tempOwner.push(row);
+    }
+    const ok = tryPlaceEquationWithOwner(eqObj, 0, tempGrid, tempOwner, rows, cols, maxAttempts);
+    if (ok) {
+        // just merge tempGrid into real grid where different
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                if (tempGrid[r][c] !== '_') grid[r][c] = tempGrid[r][c];
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
+// -------------------- RENDER/INTERACTION FUNCTIONS (unchanged) --------------------
+
+// Render the grid
+function renderGrid() {
+    const gridContainer = document.getElementById('gridContainer');
+    gridContainer.innerHTML = '';
+    
+    // Create grid rows
+    for (let row = 0; row < gridData.length; row++) {
+        const gridRow = document.createElement('div');
+        gridRow.className = 'grid-row';
+        
+        for (let col = 0; col < gridData[row].length; col++) {
+            const cellValue = gridData[row][col];
+            const cell = document.createElement('div');
+            cell.className = 'grid-cell';
+            cell.dataset.row = row;
+            cell.dataset.col = col;
+            
+            if (cellValue === null) {
+                cell.classList.add('hidden');
+                cell.innerHTML = '<i class="fas fa-question"></i>';
+            } else if (cellValue === '_') {
+                cell.classList.add('empty');
+                cell.textContent = '';
+            } else if (['+', '-', '×', '÷'].includes(cellValue)) {
+                cell.classList.add('operator');
+                cell.textContent = cellValue;
+            } else if (cellValue === '=') {
+                cell.classList.add('equals');
+                cell.textContent = cellValue;
+            } else {
+                // Check if this cell has a solution
                 const cellKey = `${row},${col}`;
                 if (solutionData[cellKey] !== undefined) {
-                    delete solutionData[cellKey];
+                    cell.classList.add('input');
+                } else {
+                    cell.classList.add('fixed');
                 }
+                cell.textContent = cellValue;
             }
             
-            // Re-render grid
-            renderGrid();
+            // Add click event
+            cell.addEventListener('click', handleCellClick);
             
-            // Update JSON output
-            updateJsonOutput();
-            
-            // Hide modal
-            cellEditorModal.hide();
+            gridRow.appendChild(cell);
         }
+        
+        gridContainer.appendChild(gridRow);
+    }
+}
 
-        // Set solution for selected cell
-        function setSolution() {
-            if (!selectedCell) {
-                alert('Please select a cell first.');
-                return;
-            }
-            
-            const row = parseInt(selectedCell.dataset.row);
-            const col = parseInt(selectedCell.dataset.col);
-            
-            // Show solution modal
-            document.getElementById('solutionCellPos').textContent = 
-                `Row: ${row}, Col: ${col}`;
-            document.getElementById('solutionValue').value = '';
-            
-            // Hide cell editor modal first
-            cellEditorModal.hide();
-            
-            // Then show solution modal
-            setTimeout(() => {
-                solutionModal.show();
-            }, 500);
-        }
-
-        // Save solution value
-        function saveSolution() {
-            if (!selectedCell) return;
-            
-            const row = parseInt(selectedCell.dataset.row);
-            const col = parseInt(selectedCell.dataset.col);
-            const value = document.getElementById('solutionValue').value;
-            
-            if (!value) {
-                alert('Please enter a solution value.');
-                return;
-            }
-            
-            // Save solution
-            const cellKey = `${row},${col}`;
-            solutionData[cellKey] = parseInt(value);
-            
-            // Mark cell as input cell
-            if (gridData[row][col] === '_') {
-                gridData[row][col] = '?';
-            }
-            
-            // Re-render grid
-            renderGrid();
-            
-            // Update JSON output
-            updateJsonOutput();
-            
-            // Hide solution modal and don't return to cell editor
-            solutionModal.hide();
-        }
-
-        // Add a new choice
-        function addChoice() {
-            const input = document.getElementById('newChoiceInput');
-            const value = parseInt(input.value);
-            
-            if (isNaN(value)) {
-                alert('Please enter a valid number.');
-                return;
-            }
-            
-            choices.push(value);
-            renderChoices();
-            
-            // Clear input
-            input.value = '';
-            input.focus();
-            
-            // Update JSON output
-            updateJsonOutput();
-        }
-
-        // Remove a choice
-        function removeChoice(index) {
-            choices.splice(index, 1);
-            renderChoices();
-            
-            // Update JSON output
-            updateJsonOutput();
-        }
-
-        // Render choices
-        function renderChoices() {
-            const container = document.getElementById('choicesContainer');
-            container.innerHTML = '';
-            
-            if (choices.length === 0) {
-                container.innerHTML = '<p class="text-muted">No choices added yet.</p>';
-                return;
-            }
-            
-            choices.forEach((choice, index) => {
-                const choiceElement = document.createElement('div');
-                choiceElement.className = 'choice-item';
-                choiceElement.innerHTML = `
-                    ${choice}
-                    <span class="choice-remove" data-index="${index}">
-                        <i class="fas fa-times"></i>
-                    </span>
-                `;
-                
-                const removeBtn = choiceElement.querySelector('.choice-remove');
-                removeBtn.addEventListener('click', () => removeChoice(index));
-                
-                container.appendChild(choiceElement);
+// Handle cell click
+function handleCellClick(event) {
+    const cell = event.target;
+    selectedCell = cell;
+    
+    // Remove previous selection
+    document.querySelectorAll('.grid-cell.selected').forEach(cell => {
+        cell.classList.remove('selected');
+    });
+    
+    // Select current cell
+    cell.classList.add('selected');
+    
+    // Show cell editor modal
+    document.getElementById('currentCellPos').textContent = 
+        `Row: ${cell.dataset.row}, Col: ${cell.dataset.col}`;
+    
+    // Clear previous selection in modal
+    document.querySelectorAll('.input-option').forEach(opt => opt.classList.remove('selected'));
+    
+    // Pre-select the current value if it exists
+    const row = parseInt(cell.dataset.row);
+    const col = parseInt(cell.dataset.col);
+    const currentValue = gridData[row][col];
+    
+    // Reset selected values
+    selectedValues = [];
+    
+    if (currentValue && currentValue !== '_' && currentValue !== null) {
+        // Handle multiple values (comma separated)
+        const values = currentValue.split(',');
+        
+        values.forEach(value => {
+            const trimmedValue = value.trim();
+            document.querySelectorAll('.input-option').forEach(opt => {
+                if (opt.getAttribute('data-value') === trimmedValue) {
+                    opt.classList.add('selected');
+                    selectedValues.push(trimmedValue);
+                }
             });
-        }
+        });
+    }
+    
+    updateSelectedValuesDisplay();
+    cellEditorModal.show();
+}
 
-        // Validate equations in the grid
-        function validateGrid() {
-            // This would validate that equations are properly formed
-            // For simplicity, we'll just show a message
-            alert('Grid validation would check if equations are properly formed. This feature would be implemented in a complete version.');
+// Apply cell value from modal
+function applyCellValue() {
+    if (!selectedCell) return;
+    
+    const row = parseInt(selectedCell.dataset.row);
+    const col = parseInt(selectedCell.dataset.col);
+    
+    // Use selected values or default to blank
+    if (selectedValues.length > 0) {
+        // Check if we have only numbers selected (merge them)
+        const hasOnlyNumbers = selectedValues.every(val => !isNaN(val));
+        
+        if (hasOnlyNumbers) {
+            // Merge numbers into a single value (e.g., 1 and 2 become 12)
+            gridData[row][col] = selectedValues.join('');
+        } else {
+            // For operators and special values, use the first selected value
+            gridData[row][col] = selectedValues[0];
         }
-
-        // Export grid as JSON
-        function exportJson() {
-            const gridDataForExport = {
-                grid: gridData,
-                solution: solutionData,
-                choices: choices
-            };
-            
-            const dataStr = JSON.stringify(gridDataForExport, null, 2);
-            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-            
-            const exportFileDefaultName = 'math-grid.json';
-            
-            const linkElement = document.createElement('a');
-            linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', exportFileDefaultName);
-            linkElement.click();
+    } else {
+        gridData[row][col] = '_';
+        
+        // Remove from solution if it was there
+        const cellKey = `${row},${col}`;
+        if (solutionData[cellKey] !== undefined) {
+            delete solutionData[cellKey];
         }
+    }
+    
+    // Re-render grid
+    renderGrid();
+    
+    // Update JSON output
+    updateJsonOutput();
+    
+    // Hide modal
+    cellEditorModal.hide();
+}
 
-        // Update JSON output display
-        function updateJsonOutput() {
-            const gridDataForExport = {
-                grid: gridData,
-                solution: solutionData,
-                choices: choices
-            };
-            
-            document.getElementById('jsonOutput').textContent = 
-                JSON.stringify(gridDataForExport, null, 2);
+// Set solution for selected cell
+function setSolution() {
+    if (!selectedCell) {
+        alert('Please select a cell first.');
+        return;
+    }
+    
+    const row = parseInt(selectedCell.dataset.row);
+    const col = parseInt(selectedCell.dataset.col);
+    
+    // Show solution modal
+    document.getElementById('solutionCellPos').textContent = 
+        `Row: ${row}, Col: ${col}`;
+    document.getElementById('solutionValue').value = '';
+    
+    // Hide cell editor modal first
+    cellEditorModal.hide();
+    
+    // Then show solution modal
+    setTimeout(() => {
+        solutionModal.show();
+    }, 500);
+}
 
-            document.getElementById('gridInput').value = JSON.stringify(gridData);
-            document.getElementById('solutionInput').value = JSON.stringify(solutionData);
-            document.getElementById('choicesInput').value = JSON.stringify(choices);
-        }
+// Save solution value
+function saveSolution() {
+    if (!selectedCell) return;
+    
+    const row = parseInt(selectedCell.dataset.row);
+    const col = parseInt(selectedCell.dataset.col);
+    const value = document.getElementById('solutionValue').value;
+    
+    if (!value) {
+        alert('Please enter a solution value.');
+        return;
+    }
+    
+    // Save solution
+    const cellKey = `${row},${col}`;
+    solutionData[cellKey] = parseInt(value);
+    
+    // Mark cell as input cell
+    if (gridData[row][col] === '_') {
+        gridData[row][col] = '?';
+    }
+    
+    // Re-render grid
+    renderGrid();
+    
+    // Update JSON output
+    updateJsonOutput();
+    
+    // Hide solution modal and don't return to cell editor
+    solutionModal.hide();
+}
 
-        // Reset grid
-        function resetGrid() {
-            if (confirm('Are you sure you want to reset the grid? All changes will be lost.')) {
-                generateManualGrid();
-                choices = [];
-                renderChoices();
-            }
-        }
+// Add a new choice
+function addChoice() {
+    const input = document.getElementById('newChoiceInput');
+    const value = parseInt(input.value);
+    
+    if (isNaN(value)) {
+        alert('Please enter a valid number.');
+        return;
+    }
+    
+    choices.push(value);
+    renderChoices();
+    
+    // Clear input
+    input.value = '';
+    input.focus();
+    
+    // Update JSON output
+    updateJsonOutput();
+}
+
+// Remove a choice
+function removeChoice(index) {
+    choices.splice(index, 1);
+    renderChoices();
+    
+    // Update JSON output
+    updateJsonOutput();
+}
+
+// Render choices
+function renderChoices() {
+    const container = document.getElementById('choicesContainer');
+    container.innerHTML = '';
+    
+    if (choices.length === 0) {
+        container.innerHTML = '<p class="text-muted">No choices added yet.</p>';
+        return;
+    }
+    
+    choices.forEach((choice, index) => {
+        const choiceElement = document.createElement('div');
+        choiceElement.className = 'choice-item';
+        choiceElement.innerHTML = `
+            ${choice}
+            <span class="choice-remove" data-index="${index}">
+                <i class="fas fa-times"></i>
+            </span>
+        `;
+        
+        const removeBtn = choiceElement.querySelector('.choice-remove');
+        removeBtn.addEventListener('click', () => removeChoice(index));
+        
+        container.appendChild(choiceElement);
+    });
+}
+
+// Validate equations in the grid
+function validateGrid() {
+    // This would validate that equations are properly formed
+    // For simplicity, we'll just show a message
+    alert('Grid validation would check if equations are properly formed. This feature would be implemented in a complete version.');
+}
+
+// Export grid as JSON
+function exportJson() {
+    const gridDataForExport = {
+        grid: gridData,
+        solution: solutionData,
+        choices: choices
+    };
+    
+    const dataStr = JSON.stringify(gridDataForExport, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportFileDefaultName = 'math-grid.json';
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+}
+
+// Update JSON output display
+function updateJsonOutput() {
+    const gridDataForExport = {
+        grid: gridData,
+        solution: solutionData,
+        choices: choices
+    };
+    
+    document.getElementById('jsonOutput').textContent = 
+        JSON.stringify(gridDataForExport, null, 2);
+
+    document.getElementById('gridInput').value = JSON.stringify(gridData);
+    document.getElementById('solutionInput').value = JSON.stringify(solutionData);
+    document.getElementById('choicesInput').value = JSON.stringify(choices);
+}
+
+// Reset grid
+function resetGrid() {
+    if (confirm('Are you sure you want to reset the grid? All changes will be lost.')) {
+        generateManualGrid();
+        choices = [];
+        renderChoices();
+    }
+}
+
+// -------------------- UTILITIES --------------------
+function clone2D(arr) {
+    return arr.map(r => r.slice());
+}
+
+function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+}
+
+// -----------------------------------------------------------------------------------------------
     </script>   
    {% endblock extra_scripts  %}
    <div class="form-buttons" style="display:flex; justify-content:flex-end; gap: 10px; margin:20px;">

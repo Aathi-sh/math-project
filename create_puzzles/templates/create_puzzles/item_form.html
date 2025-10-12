@@ -748,48 +748,83 @@ function makeEqObj(cellsArray, blankIndex, solutionValue) {
     return { cells: cellsArray, blankIndex: blankIndex, solutionValue: solutionValue };
 }
 
-// Generate easy level equations - ONE missing place
+// Generate easy level equations - ONE missing place with uniqueness
 function generateEasyLevel(equationCount = 4, choiceCount = 12) {
     const eqObjects = [];
     const requiredAnswers = [];
     const visibleNumbers = [];
+    const usedEquations = new Set(); // Track used equations
 
     for (let i = 0; i < equationCount; i++) {
-        const a = Math.floor(Math.random() * 4) + 1; // 1-4
-        const b = Math.floor(Math.random() * 4) + 1; // 1-4
-        const op = Math.random() > 0.5 ? '+' : '-';
-        const result = op === '+' ? a + b : a - b;
+        let attempts = 0;
+        let equation, solutionValue, blankPos;
+        
+        while (attempts < 50) { // Limit attempts to avoid infinite loops
+            attempts++;
+            const a = Math.floor(Math.random() * 8) + 1; // 1-8 (increased range for variety)
+            const b = Math.floor(Math.random() * 8) + 1; // 1-8
+            const op = Math.random() > 0.5 ? '+' : '-';
+            const result = op === '+' ? a + b : a - b;
 
-        // Only allow blanks on numbers (positions 0, 2, or 4) - ONE blank only
-        const blankPositions = [0, 2, 4];
-        const blankPos = blankPositions[Math.floor(Math.random() * blankPositions.length)];
+            // Skip if result is negative or zero
+            if (result <= 0) continue;
 
-        const equation = new Array(5).fill('');
-        equation[0] = blankPos === 0 ? null : a;
-        equation[1] = op;
-        equation[2] = blankPos === 2 ? null : b;
-        equation[3] = '=';
-        equation[4] = blankPos === 4 ? null : result;
+            // Only allow blanks on numbers (positions 0, 2, or 4) - ONE blank only
+            const blankPositions = [0, 2, 4];
+            blankPos = blankPositions[Math.floor(Math.random() * blankPositions.length)];
 
-        // Calculate and store the solution
-        let solutionValue;
-        switch (blankPos) {
-            case 0:
-                solutionValue = op === '+' ? result - b : result + b;
+            equation = new Array(5).fill('');
+            equation[0] = blankPos === 0 ? null : a;
+            equation[1] = op;
+            equation[2] = blankPos === 2 ? null : b;
+            equation[3] = '=';
+            equation[4] = blankPos === 4 ? null : result;
+
+            // Calculate and store the solution
+            switch (blankPos) {
+                case 0:
+                    solutionValue = op === '+' ? result - b : result + b;
+                    break;
+                case 2:
+                    solutionValue = op === '+' ? result - a : a - result;
+                    break;
+                case 4:
+                    solutionValue = op === '+' ? a + b : a - b;
+                    break;
+                default:
+                    solutionValue = 0;
+            }
+
+            if (solutionValue < 0) {
+                continue;
+            }
+
+            // Create unique signature for this equation
+            const eqSignature = `${a}${op}${b}=${result}|${blankPos}`;
+            
+            // Check if this equation is unique
+            if (!usedEquations.has(eqSignature)) {
+                usedEquations.add(eqSignature);
                 break;
-            case 2:
-                solutionValue = op === '+' ? result - a : a - result;
-                break;
-            case 4:
-                solutionValue = op === '+' ? a + b : a - b;
-                break;
-            default:
-                solutionValue = 0;
+            }
         }
 
-        if (solutionValue < 0) {
-            i--;
-            continue;
+        // If we couldn't find a unique equation, use fallback
+        if (attempts >= 50) {
+            const fallbackEquations = [
+                { eq: [3, '+', 4, '=', 7], blank: 0, sol: 3 },
+                { eq: [5, '-', 2, '=', 3], blank: 2, sol: 2 },
+                { eq: [6, '+', 1, '=', 7], blank: 4, sol: 7 },
+                { eq: [8, '-', 3, '=', 5], blank: 0, sol: 8 },
+                { eq: [2, '+', 6, '=', 8], blank: 2, sol: 6 },
+                { eq: [7, '-', 2, '=', 5], blank: 4, sol: 5 }
+            ];
+            
+            const fallback = fallbackEquations[i % fallbackEquations.length];
+            equation = [...fallback.eq];
+            equation[fallback.blank] = null;
+            solutionValue = fallback.sol;
+            blankPos = fallback.blank;
         }
 
         // record visible numbers
@@ -801,74 +836,110 @@ function generateEasyLevel(equationCount = 4, choiceCount = 12) {
         requiredAnswers.push(solutionValue);
     }
 
-    // If not enough equations, fill with simple fallback equations
-    while (eqObjects.length < equationCount) {
-        eqObjects.push(makeEqObj([2, '+', 3, '=', 5], 0, 2));
-        requiredAnswers.push(2);
-    }
-
     const choices = generateChoices(requiredAnswers, visibleNumbers, choiceCount, 1, 20);
 
     return { equations: eqObjects, choices };
 }
 
-// Generate medium level equations - TWO missing places
+// Generate medium level equations - TWO missing places with uniqueness
 function generateMediumLevel(equationCount = 4, choiceCount = 15) {
     const eqObjects = [];
     const requiredAnswers = [];
     const visibleNumbers = [];
+    const usedEquations = new Set();
 
     for (let i = 0; i < equationCount; i++) {
-        const equationType = Math.floor(Math.random() * 4);
+        let attempts = 0;
         let equation, solutionValue1, solutionValue2, blankPos1, blankPos2;
+        
+        while (attempts < 50) {
+            attempts++;
+            const equationType = Math.floor(Math.random() * 4);
+            let eqSignature;
 
-        switch (equationType) {
-            case 0: // a + b = c
-                const a1 = Math.floor(Math.random() * 6) + 5; // 5-10
-                const b1 = Math.floor(Math.random() * 6) + 5; // 5-10
-                // TWO missing places for medium level
-                [blankPos1, blankPos2] = getTwoRandomBlankPositions([0, 2, 4]);
-                equation = buildEquationWithTwoBlanks(a1, '+', b1, '=', a1 + b1, blankPos1, blankPos2);
-                const solutions1 = calculateTwoMissingValues(a1, b1, a1 + b1, '+', blankPos1, blankPos2);
-                solutionValue1 = solutions1[0];
-                solutionValue2 = solutions1[1];
+            switch (equationType) {
+                case 0: // a + b = c
+                    const a1 = Math.floor(Math.random() * 8) + 3; // 3-10
+                    const b1 = Math.floor(Math.random() * 8) + 3; // 3-10
+                    // TWO missing places for medium level
+                    [blankPos1, blankPos2] = getTwoRandomBlankPositions([0, 2, 4]);
+                    equation = buildEquationWithTwoBlanks(a1, '+', b1, '=', a1 + b1, blankPos1, blankPos2);
+                    const solutions1 = calculateTwoMissingValues(a1, b1, a1 + b1, '+', blankPos1, blankPos2);
+                    solutionValue1 = solutions1[0];
+                    solutionValue2 = solutions1[1];
+                    eqSignature = `add${a1}+${b1}=${a1+b1}|${blankPos1},${blankPos2}`;
+                    break;
+                case 1: // a - b = c
+                    const a2 = Math.floor(Math.random() * 10) + 5; // 5-14
+                    const b2 = Math.floor(Math.random() * 8) + 1;  // 1-8
+                    // Ensure positive result
+                    if (a2 - b2 <= 0) continue;
+                    [blankPos1, blankPos2] = getTwoRandomBlankPositions([0, 2, 4]);
+                    equation = buildEquationWithTwoBlanks(a2, '-', b2, '=', a2 - b2, blankPos1, blankPos2);
+                    const solutions2 = calculateTwoMissingValues(a2, b2, a2 - b2, '-', blankPos1, blankPos2);
+                    solutionValue1 = solutions2[0];
+                    solutionValue2 = solutions2[1];
+                    eqSignature = `sub${a2}-${b2}=${a2-b2}|${blankPos1},${blankPos2}`;
+                    break;
+                case 2: // a * b = c
+                    const a3 = Math.floor(Math.random() * 5) + 2; // 2-6
+                    const b3 = Math.floor(Math.random() * 5) + 2; // 2-6
+                    [blankPos1, blankPos2] = getTwoRandomBlankPositions([0, 2, 4]);
+                    equation = buildEquationWithTwoBlanks(a3, '×', b3, '=', a3 * b3, blankPos1, blankPos2);
+                    const solutions3 = calculateTwoMissingValues(a3, b3, a3 * b3, '×', blankPos1, blankPos2);
+                    solutionValue1 = solutions3[0];
+                    solutionValue2 = solutions3[1];
+                    eqSignature = `mult${a3}×${b3}=${a3*b3}|${blankPos1},${blankPos2}`;
+                    break;
+                case 3: // a / b = c (ensure integer division)
+                    const b4 = Math.floor(Math.random() * 4) + 2; // 2-5
+                    const c4 = Math.floor(Math.random() * 5) + 2; // 2-6
+                    const a4 = b4 * c4;
+                    [blankPos1, blankPos2] = getTwoRandomBlankPositions([0, 2, 4]);
+                    equation = buildEquationWithTwoBlanks(a4, '÷', b4, '=', c4, blankPos1, blankPos2);
+                    const solutions4 = calculateTwoMissingValues(a4, b4, c4, '÷', blankPos1, blankPos2);
+                    solutionValue1 = solutions4[0];
+                    solutionValue2 = solutions4[1];
+                    eqSignature = `div${a4}÷${b4}=${c4}|${blankPos1},${blankPos2}`;
+                    break;
+            }
+
+            // Validate solutions
+            if (solutionValue1 < 0 || solutionValue2 < 0 || 
+                !Number.isInteger(solutionValue1) || !Number.isInteger(solutionValue2)) {
+                continue;
+            }
+
+            // Check uniqueness
+            if (!usedEquations.has(eqSignature)) {
+                usedEquations.add(eqSignature);
                 break;
-            case 1: // a - b = c
-                const a2 = Math.floor(Math.random() * 6) + 6; // 6-11
-                const b2 = Math.floor(Math.random() * 5) + 1; // 1-5
-                [blankPos1, blankPos2] = getTwoRandomBlankPositions([0, 2, 4]);
-                equation = buildEquationWithTwoBlanks(a2, '-', b2, '=', a2 - b2, blankPos1, blankPos2);
-                const solutions2 = calculateTwoMissingValues(a2, b2, a2 - b2, '-', blankPos1, blankPos2);
-                solutionValue1 = solutions2[0];
-                solutionValue2 = solutions2[1];
-                break;
-            case 2: // a * b = c
-                const a3 = Math.floor(Math.random() * 4) + 2; // 2-5
-                const b3 = Math.floor(Math.random() * 4) + 2; // 2-5
-                [blankPos1, blankPos2] = getTwoRandomBlankPositions([0, 2, 4]);
-                equation = buildEquationWithTwoBlanks(a3, '×', b3, '=', a3 * b3, blankPos1, blankPos2);
-                const solutions3 = calculateTwoMissingValues(a3, b3, a3 * b3, '×', blankPos1, blankPos2);
-                solutionValue1 = solutions3[0];
-                solutionValue2 = solutions3[1];
-                break;
-            case 3: // a / b = c (ensure integer division)
-                const b4 = Math.floor(Math.random() * 3) + 2; // 2-4
-                const c4 = Math.floor(Math.random() * 4) + 2; // 2-5
-                const a4 = b4 * c4;
-                [blankPos1, blankPos2] = getTwoRandomBlankPositions([0, 2, 4]);
-                equation = buildEquationWithTwoBlanks(a4, '÷', b4, '=', c4, blankPos1, blankPos2);
-                const solutions4 = calculateTwoMissingValues(a4, b4, c4, '÷', blankPos1, blankPos2);
-                solutionValue1 = solutions4[0];
-                solutionValue2 = solutions4[1];
-                break;
+            }
+        }
+
+        // Fallback if no unique equation found
+        if (attempts >= 50) {
+            const fallbackEquations = [
+                { eq: [12, '÷', 3, '=', 4], blanks: [0,2], sols: [12,3] },
+                { eq: [6, '×', 4, '=', 24], blanks: [2,4], sols: [4,24] },
+                { eq: [15, '-', 7, '=', 8], blanks: [0,4], sols: [15,8] },
+                { eq: [9, '+', 6, '=', 15], blanks: [2,4], sols: [6,15] }
+            ];
+            
+            const fallback = fallbackEquations[i % fallbackEquations.length];
+            equation = [...fallback.eq];
+            equation[fallback.blanks[0]] = null;
+            equation[fallback.blanks[1]] = null;
+            solutionValue1 = fallback.sols[0];
+            solutionValue2 = fallback.sols[1];
+            blankPos1 = fallback.blanks[0];
+            blankPos2 = fallback.blanks[1];
         }
 
         equation.forEach(cell => {
             if (typeof cell === 'number') visibleNumbers.push(cell);
         });
 
-        // For equations with two blanks, we need to store both solution values
-        // We'll modify the equation object to handle multiple blanks
         const eqObj = { 
             cells: equation, 
             blankIndices: [blankPos1, blankPos2], 
@@ -885,60 +956,85 @@ function generateMediumLevel(equationCount = 4, choiceCount = 15) {
     return { equations: eqObjects, choices };
 }
 
-// Generate hard level equations - TWO missing places
+// Generate hard level equations - TWO missing places with uniqueness
 function generateHardLevel(equationCount = 6, choiceCount = 20) {
     const eqObjects = [];
     const requiredAnswers = [];
     const visibleNumbers = [];
+    const usedEquations = new Set();
 
     for (let i = 0; i < equationCount; i++) {
-        const equationType = Math.floor(Math.random() * 4);
+        let attempts = 0;
         let equation, solutionValue1, solutionValue2, blankPos1, blankPos2;
+        
+        while (attempts < 50) {
+            attempts++;
+            const equationType = Math.floor(Math.random() * 4);
+            let eqSignature;
 
-        switch (equationType) {
-            case 0: // a + b * c = d
-                const b1 = Math.floor(Math.random() * 4) + 2; // 2-5
-                const c1 = Math.floor(Math.random() * 4) + 2; // 2-5
-                const a1 = Math.floor(Math.random() * 10) + 5; // 5-14
-                const result1 = a1 + b1 * c1;
-                [blankPos1, blankPos2] = getTwoRandomBlankPositions([0, 2, 4, 6]);
-                equation = buildMultiOpEquationWithTwoBlanks(a1, '+', b1, '×', c1, '=', result1, blankPos1, blankPos2);
-                const solutions1 = calculateMultiOpTwoMissingValues(a1, b1, c1, result1, ['+', '×'], blankPos1, blankPos2);
-                solutionValue1 = solutions1[0];
-                solutionValue2 = solutions1[1];
+            switch (equationType) {
+                case 0: // a + b * c = d
+                    const b1 = Math.floor(Math.random() * 4) + 2; // 2-5
+                    const c1 = Math.floor(Math.random() * 4) + 2; // 2-5
+                    const a1 = Math.floor(Math.random() * 8) + 5; // 5-12
+                    const result1 = a1 + b1 * c1;
+                    [blankPos1, blankPos2] = getTwoRandomBlankPositions([0, 2, 4, 6]);
+                    equation = buildMultiOpEquationWithTwoBlanks(a1, '+', b1, '×', c1, '=', result1, blankPos1, blankPos2);
+                    const solutions1 = calculateMultiOpTwoMissingValues(a1, b1, c1, result1, ['+', '×'], blankPos1, blankPos2);
+                    solutionValue1 = solutions1[0];
+                    solutionValue2 = solutions1[1];
+                    eqSignature = `hard1${a1}+${b1}×${c1}=${result1}|${blankPos1},${blankPos2}`;
+                    break;
+                case 1: // a * b - c = d
+                    const a2 = Math.floor(Math.random() * 4) + 3; // 3-6
+                    const b2 = Math.floor(Math.random() * 4) + 3; // 3-6
+                    const c2 = Math.floor(Math.random() * 8) + 5; // 5-12
+                    const result2 = a2 * b2 - c2;
+                    if (result2 <= 0) continue;
+                    [blankPos1, blankPos2] = getTwoRandomBlankPositions([0, 2, 4, 6]);
+                    equation = buildMultiOpEquationWithTwoBlanks(a2, '×', b2, '-', c2, '=', result2, blankPos1, blankPos2);
+                    const solutions2 = calculateMultiOpTwoMissingValues(a2, b2, c2, result2, ['×', '-'], blankPos1, blankPos2);
+                    solutionValue1 = solutions2[0];
+                    solutionValue2 = solutions2[1];
+                    eqSignature = `hard2${a2}×${b2}-${c2}=${result2}|${blankPos1},${blankPos2}`;
+                    break;
+                case 2: // a / b = c (integer division)
+                    const b3 = Math.floor(Math.random() * 4) + 2; // 2-5
+                    const c3 = Math.floor(Math.random() * 6) + 3; // 3-8
+                    const a3 = b3 * c3;
+                    [blankPos1, blankPos2] = getTwoRandomBlankPositions([0, 2, 4]);
+                    equation = buildEquationWithTwoBlanks(a3, '÷', b3, '=', c3, blankPos1, blankPos2);
+                    const solutions3 = calculateTwoMissingValues(a3, b3, c3, '÷', blankPos1, blankPos2);
+                    solutionValue1 = solutions3[0];
+                    solutionValue2 = solutions3[1];
+                    eqSignature = `hard3${a3}÷${b3}=${c3}|${blankPos1},${blankPos2}`;
+                    break;
+                case 3: // a - b / c = d (integer division)
+                    const c4 = Math.floor(Math.random() * 3) + 2;   // 2-4
+                    const b4 = Math.floor(Math.random() * 8) + 4;   // 4-11
+                    const a4 = Math.floor(Math.random() * 15) + 10; // 10-24
+                    const result4 = a4 - Math.floor(b4 / c4);
+                    if (result4 <= 0) continue;
+                    [blankPos1, blankPos2] = getTwoRandomBlankPositions([0, 2, 4, 6]);
+                    equation = buildMultiOpEquationWithTwoBlanks(a4, '-', b4, '÷', c4, '=', result4, blankPos1, blankPos2);
+                    const solutions4 = calculateMultiOpTwoMissingValues(a4, b4, c4, result4, ['-', '÷'], blankPos1, blankPos2);
+                    solutionValue1 = solutions4[0];
+                    solutionValue2 = solutions4[1];
+                    eqSignature = `hard4${a4}-${b4}÷${c4}=${result4}|${blankPos1},${blankPos2}`;
+                    break;
+            }
+
+            // Validate solutions
+            if (solutionValue1 < 0 || solutionValue2 < 0 || 
+                !Number.isInteger(solutionValue1) || !Number.isInteger(solutionValue2)) {
+                continue;
+            }
+
+            // Check uniqueness
+            if (!usedEquations.has(eqSignature)) {
+                usedEquations.add(eqSignature);
                 break;
-            case 1: // a * b - c = d
-                const a2 = Math.floor(Math.random() * 4) + 3; // 3-6
-                const b2 = Math.floor(Math.random() * 4) + 3; // 3-6
-                const c2 = Math.floor(Math.random() * 10) + 5; // 5-14
-                const result2 = a2 * b2 - c2;
-                [blankPos1, blankPos2] = getTwoRandomBlankPositions([0, 2, 4, 6]);
-                equation = buildMultiOpEquationWithTwoBlanks(a2, '×', b2, '-', c2, '=', result2, blankPos1, blankPos2);
-                const solutions2 = calculateMultiOpTwoMissingValues(a2, b2, c2, result2, ['×', '-'], blankPos1, blankPos2);
-                solutionValue1 = solutions2[0];
-                solutionValue2 = solutions2[1];
-                break;
-            case 2: // a / b = c (integer division)
-                const b3 = Math.floor(Math.random() * 3) + 2; // 2-4
-                const c3 = Math.floor(Math.random() * 5) + 3; // 3-7
-                const a3 = b3 * c3;
-                [blankPos1, blankPos2] = getTwoRandomBlankPositions([0, 2, 4]);
-                equation = buildEquationWithTwoBlanks(a3, '÷', b3, '=', c3, blankPos1, blankPos2);
-                const solutions3 = calculateTwoMissingValues(a3, b3, c3, '÷', blankPos1, blankPos2);
-                solutionValue1 = solutions3[0];
-                solutionValue2 = solutions3[1];
-                break;
-            case 3: // a - b / c = d (integer division)
-                const c4 = Math.floor(Math.random() * 3) + 2; // 2-4
-                const b4 = Math.floor(Math.random() * 8) + 4; // 4-11
-                const a4 = Math.floor(Math.random() * 15) + 10; // 10-24
-                const result4 = a4 - Math.floor(b4 / c4);
-                [blankPos1, blankPos2] = getTwoRandomBlankPositions([0, 2, 4, 6]);
-                equation = buildMultiOpEquationWithTwoBlanks(a4, '-', b4, '÷', c4, '=', result4, blankPos1, blankPos2);
-                const solutions4 = calculateMultiOpTwoMissingValues(a4, b4, c4, result4, ['-', '÷'], blankPos1, blankPos2);
-                solutionValue1 = solutions4[0];
-                solutionValue2 = solutions4[1];
-                break;
+            }
         }
 
         equation.forEach(cell => {
@@ -961,83 +1057,115 @@ function generateHardLevel(equationCount = 6, choiceCount = 20) {
     return { equations: eqObjects, choices };
 }
 
-// Generate expert level equations - TWO missing places
+// Generate expert level equations - TWO missing places with uniqueness
 function generateExpertLevel(equationCount = 8, choiceCount = 25) {
     const eqObjects = [];
     const requiredAnswers = [];
     const visibleNumbers = [];
+    const usedEquations = new Set();
 
     for (let i = 0; i < equationCount; i++) {
-        const equationType = Math.floor(Math.random() * 5);
+        let attempts = 0;
         let equation, solutionValue1, solutionValue2, blankPos1, blankPos2;
+        
+        while (attempts < 50) {
+            attempts++;
+            const equationType = Math.floor(Math.random() * 5);
+            let eqSignature;
 
-        switch (equationType) {
-            case 0: // a + b * c - d = e
-                const a1 = Math.floor(Math.random() * 20) + 10; // 10-29
-                const b1 = Math.floor(Math.random() * 10) + 5;  // 5-14
-                const c1 = Math.floor(Math.random() * 5) + 2;   // 2-6
-                const d1 = Math.floor(Math.random() * 10) + 5;  // 5-14
-                const result1 = a1 + b1 * c1 - d1;
-                [blankPos1, blankPos2] = getTwoRandomBlankPositions([0,2,4,6,8]);
-                equation = buildMultiOpEquationWithTwoBlanks(a1, '+', b1, '×', c1, '-', d1, '=', result1, blankPos1, blankPos2);
-                const solutions1 = calculateMultiOpTwoMissingValues(a1, b1, c1, d1, result1, ['+', '×', '-'], blankPos1, blankPos2);
-                solutionValue1 = solutions1[0];
-                solutionValue2 = solutions1[1];
-                break;
+            switch (equationType) {
+                case 0: // a + b * c - d = e
+                    const a1 = Math.floor(Math.random() * 15) + 10; // 10-24
+                    const b1 = Math.floor(Math.random() * 8) + 5;   // 5-12
+                    const c1 = Math.floor(Math.random() * 4) + 2;   // 2-5
+                    const d1 = Math.floor(Math.random() * 8) + 5;   // 5-12
+                    const result1 = a1 + b1 * c1 - d1;
+                    if (result1 <= 0) continue;
+                    [blankPos1, blankPos2] = getTwoRandomBlankPositions([0,2,4,6,8]);
+                    equation = buildMultiOpEquationWithTwoBlanks(a1, '+', b1, '×', c1, '-', d1, '=', result1, blankPos1, blankPos2);
+                    const solutions1 = calculateMultiOpTwoMissingValues(a1, b1, c1, d1, result1, ['+', '×', '-'], blankPos1, blankPos2);
+                    solutionValue1 = solutions1[0];
+                    solutionValue2 = solutions1[1];
+                    eqSignature = `exp1${a1}+${b1}×${c1}-${d1}=${result1}|${blankPos1},${blankPos2}`;
+                    break;
 
-            case 1: // (a * b) / c + d = e
-                const a2 = Math.floor(Math.random() * 15) + 5;  // 5-19
-                const b2 = Math.floor(Math.random() * 10) + 3;  // 3-12
-                const c2 = Math.floor(Math.random() * 4) + 2;   // 2-5
-                const d2 = Math.floor(Math.random() * 20) + 5;  // 5-24
-                const result2 = Math.floor((a2 * b2) / c2) + d2;
-                [blankPos1, blankPos2] = getTwoRandomBlankPositions([0,2,4,6,8]);
-                equation = buildMultiOpEquationWithTwoBlanks(a2, '×', b2, '÷', c2, '+', d2, '=', result2, blankPos1, blankPos2);
-                const solutions2 = calculateMultiOpTwoMissingValues(a2, b2, c2, d2, result2, ['×','÷','+'], blankPos1, blankPos2);
-                solutionValue1 = solutions2[0];
-                solutionValue2 = solutions2[1];
-                break;
+                case 1: // (a * b) / c + d = e
+                    const a2 = Math.floor(Math.random() * 10) + 5;  // 5-14
+                    const b2 = Math.floor(Math.random() * 8) + 3;   // 3-10
+                    const c2 = Math.floor(Math.random() * 4) + 2;   // 2-5
+                    const d2 = Math.floor(Math.random() * 15) + 5;  // 5-19
+                    // Ensure integer division
+                    if ((a2 * b2) % c2 !== 0) continue;
+                    const result2 = Math.floor((a2 * b2) / c2) + d2;
+                    [blankPos1, blankPos2] = getTwoRandomBlankPositions([0,2,4,6,8]);
+                    equation = buildMultiOpEquationWithTwoBlanks(a2, '×', b2, '÷', c2, '+', d2, '=', result2, blankPos1, blankPos2);
+                    const solutions2 = calculateMultiOpTwoMissingValues(a2, b2, c2, d2, result2, ['×','÷','+'], blankPos1, blankPos2);
+                    solutionValue1 = solutions2[0];
+                    solutionValue2 = solutions2[1];
+                    eqSignature = `exp2${a2}×${b2}÷${c2}+${d2}=${result2}|${blankPos1},${blankPos2}`;
+                    break;
 
-            case 2: // a - (b + c) * d = e
-                const a3 = Math.floor(Math.random() * 30) + 20; // 20-49
-                const b3 = Math.floor(Math.random() * 10) + 5;  // 5-14
-                const c3 = Math.floor(Math.random() * 10) + 1;  // 1-10
-                const d3 = Math.floor(Math.random() * 4) + 2;   // 2-5
-                const result3 = a3 - (b3 + c3) * d3;
-                [blankPos1, blankPos2] = getTwoRandomBlankPositions([0,2,4,6,8]);
-                equation = buildMultiOpEquationWithTwoBlanks(a3, '-', b3, '+', c3, '×', d3, '=', result3, blankPos1, blankPos2);
-                const solutions3 = calculateMultiOpTwoMissingValues(a3, b3, c3, d3, result3, ['-','+','×'], blankPos1, blankPos2);
-                solutionValue1 = solutions3[0];
-                solutionValue2 = solutions3[1];
-                break;
+                case 2: // a - (b + c) * d = e
+                    const a3 = Math.floor(Math.random() * 25) + 20; // 20-44
+                    const b3 = Math.floor(Math.random() * 8) + 5;   // 5-12
+                    const c3 = Math.floor(Math.random() * 8) + 1;   // 1-8
+                    const d3 = Math.floor(Math.random() * 4) + 2;   // 2-5
+                    const result3 = a3 - (b3 + c3) * d3;
+                    if (result3 <= 0) continue;
+                    [blankPos1, blankPos2] = getTwoRandomBlankPositions([0,2,4,6,8]);
+                    equation = buildMultiOpEquationWithTwoBlanks(a3, '-', b3, '+', c3, '×', d3, '=', result3, blankPos1, blankPos2);
+                    const solutions3 = calculateMultiOpTwoMissingValues(a3, b3, c3, d3, result3, ['-','+','×'], blankPos1, blankPos2);
+                    solutionValue1 = solutions3[0];
+                    solutionValue2 = solutions3[1];
+                    eqSignature = `exp3${a3}-${b3}+${c3}×${d3}=${result3}|${blankPos1},${blankPos2}`;
+                    break;
 
-            case 3: // a / b + c * d - e = f
-                const b4 = Math.floor(Math.random() * 5) + 2;   // 2-6
-                const c4 = Math.floor(Math.random() * 8) + 3;   // 3-10
-                const d4 = Math.floor(Math.random() * 6) + 2;   // 2-7
-                const e4 = Math.floor(Math.random() * 10) + 5;  // 5-14
-                const a4 = b4 * Math.floor(Math.random() * 10 + 2); // ensure divisible
-                const result4 = Math.floor(a4 / b4) + c4 * d4 - e4;
-                [blankPos1, blankPos2] = getTwoRandomBlankPositions([0,2,4,6,8,10]);
-                equation = buildMultiOpEquationWithTwoBlanks(a4, '÷', b4, '+', c4, '×', d4, '-', e4, '=', result4, blankPos1, blankPos2);
-                const solutions4 = calculateMultiOpTwoMissingValues(a4, b4, c4, d4, e4, result4, ['÷','+','×','-'], blankPos1, blankPos2);
-                solutionValue1 = solutions4[0];
-                solutionValue2 = solutions4[1];
-                break;
+                case 3: // a / b + c * d - e = f
+                    const b4 = Math.floor(Math.random() * 4) + 2;   // 2-5
+                    const c4 = Math.floor(Math.random() * 6) + 3;   // 3-8
+                    const d4 = Math.floor(Math.random() * 5) + 2;   // 2-6
+                    const e4 = Math.floor(Math.random() * 8) + 5;   // 5-12
+                    const a4 = b4 * (Math.floor(Math.random() * 8) + 3); // ensure divisible
+                    const result4 = Math.floor(a4 / b4) + c4 * d4 - e4;
+                    if (result4 <= 0) continue;
+                    [blankPos1, blankPos2] = getTwoRandomBlankPositions([0,2,4,6,8,10]);
+                    equation = buildMultiOpEquationWithTwoBlanks(a4, '÷', b4, '+', c4, '×', d4, '-', e4, '=', result4, blankPos1, blankPos2);
+                    const solutions4 = calculateMultiOpTwoMissingValues(a4, b4, c4, d4, e4, result4, ['÷','+','×','-'], blankPos1, blankPos2);
+                    solutionValue1 = solutions4[0];
+                    solutionValue2 = solutions4[1];
+                    eqSignature = `exp4${a4}÷${b4}+${c4}×${d4}-${e4}=${result4}|${blankPos1},${blankPos2}`;
+                    break;
 
-            case 4: // Complex mix: (a + b) * c / d - e = f
-                const a5 = Math.floor(Math.random() * 20) + 5;  // 5-24
-                const b5 = Math.floor(Math.random() * 15) + 3;  // 3-17
-                const c5 = Math.floor(Math.random() * 6) + 2;   // 2-7
-                const d5 = Math.floor(Math.random() * 5) + 2;   // 2-6
-                const e5 = Math.floor(Math.random() * 10) + 1;  // 1-10
-                const result5 = Math.floor((a5 + b5) * c5 / d5) - e5;
-                [blankPos1, blankPos2] = getTwoRandomBlankPositions([0,2,4,6,8,10]);
-                equation = buildMultiOpEquationWithTwoBlanks(a5, '+', b5, '×', c5, '÷', d5, '-', e5, '=', result5, blankPos1, blankPos2);
-                const solutions5 = calculateMultiOpTwoMissingValues(a5, b5, c5, d5, e5, result5, ['+','×','÷','-'], blankPos1, blankPos2);
-                solutionValue1 = solutions5[0];
-                solutionValue2 = solutions5[1];
+                case 4: // Complex mix: (a + b) * c / d - e = f
+                    const a5 = Math.floor(Math.random() * 15) + 5;  // 5-19
+                    const b5 = Math.floor(Math.random() * 12) + 3;  // 3-14
+                    const c5 = Math.floor(Math.random() * 5) + 2;   // 2-6
+                    const d5 = Math.floor(Math.random() * 4) + 2;   // 2-5
+                    const e5 = Math.floor(Math.random() * 8) + 1;   // 1-8
+                    // Ensure integer division
+                    if (((a5 + b5) * c5) % d5 !== 0) continue;
+                    const result5 = Math.floor((a5 + b5) * c5 / d5) - e5;
+                    if (result5 <= 0) continue;
+                    [blankPos1, blankPos2] = getTwoRandomBlankPositions([0,2,4,6,8,10]);
+                    equation = buildMultiOpEquationWithTwoBlanks(a5, '+', b5, '×', c5, '÷', d5, '-', e5, '=', result5, blankPos1, blankPos2);
+                    const solutions5 = calculateMultiOpTwoMissingValues(a5, b5, c5, d5, e5, result5, ['+','×','÷','-'], blankPos1, blankPos2);
+                    solutionValue1 = solutions5[0];
+                    solutionValue2 = solutions5[1];
+                    eqSignature = `exp5${a5}+${b5}×${c5}÷${d5}-${e5}=${result5}|${blankPos1},${blankPos2}`;
+                    break;
+            }
+
+            // Validate solutions
+            if (solutionValue1 < 0 || solutionValue2 < 0 || 
+                !Number.isInteger(solutionValue1) || !Number.isInteger(solutionValue2)) {
+                continue;
+            }
+
+            // Check uniqueness
+            if (!usedEquations.has(eqSignature)) {
+                usedEquations.add(eqSignature);
                 break;
+            }
         }
 
         equation.forEach(cell => {
